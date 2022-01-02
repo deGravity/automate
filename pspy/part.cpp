@@ -81,7 +81,15 @@ void Part::init_default_mcfs(bool onshape_style, bool just_face_axes)
 		for (auto& ax_inf : face.inferences) {
 			if (ax_inf.onshape_inference || !onshape_style) {
 				default_mcfs.emplace_back(ax_inf, ax_inf, onshape_style);
-
+				// For Axial Types (Cone, Cylinder, Torus, Spun), we don't want
+				// to duplicate multiple axis references since they are equivalent
+				// and it does not matter which inference type is used. We will
+				// arbitrarily choose the top_axis_point since they all have it
+				if (ax_inf.reference.inference_type == InferenceType::BOTTOM_AXIS_POINT ||
+					ax_inf.reference.inference_type == InferenceType::MID_AXIS_POINT ||
+					ax_inf.reference.inference_type == InferenceType::POINT) {
+					continue;
+				}
 				for (auto& l: face.loop_neighbors) {
 					auto& loop = brep.nodes.loops[l];
 					for (auto& orig_inf : loop.inferences) {

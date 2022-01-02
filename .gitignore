@@ -8,6 +8,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Data and Notebook scratch directories
+data/*
+notebooks/*
+
 # Pytorch Lightning
 *lightning_logs*
 

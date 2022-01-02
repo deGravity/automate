@@ -12,3 +12,7 @@ add_library(pspy   "disjointset.cpp" "disjointset.h" "lsh.h" "lsh.cpp" "eclass.h
 target_link_libraries(pspy PUBLIC parasolid Eigen3::Eigen)
 
 target_include_directories(pspy INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_definitions(-DTEST_PART="${CMAKE_CURRENT_SOURCE_DIR}/brick.x_t")
+add_executable(debug "main.cpp")
+target_link_libraries(debug PUBLIC pspy Eigen3::Eigen)

@@ -45,6 +45,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
 	py::class_<InferenceReference>(m, "InferenceReference")
 		.def_readonly("reference_index", &InferenceReference::reference_index)
+		.def_readonly("reference_type", &InferenceReference::reference_type)
 		.def_readonly("inference_type", &InferenceReference::inference_type);
 
 	py::class_<PartInference>(m, "PartInference")
@@ -108,6 +109,12 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 		.def_readonly("loops", &PartTopologyNodes::loops)
 		.def_readonly("edges", &PartTopologyNodes::edges)
 		.def_readonly("vertices", &PartTopologyNodes::vertices);
+	
+	py::class_<PartTopologyRelations>(m, "PartTopologyRelations")
+		.def_readonly("face_to_loop", &PartTopologyRelations::face_to_loop)
+		.def_readonly("loop_to_edge", &PartTopologyRelations::loop_to_edge)
+		.def_readonly("edge_to_vertex", &PartTopologyRelations::edge_to_vertex)
+		.def_readonly("face_to_face", &PartTopologyRelations::face_to_face);
 
 	py::class_<PartTopology>(m, "PartTopology")
 		.def_readonly("nodes", &PartTopology::nodes)
@@ -168,6 +175,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 	
 
 	// types.h
+
+	py::enum_<TopologyType>(m, "TopologyType")
+		.value("FACE", TopologyType::FACE)
+		.value("EDGE", TopologyType::EDGE)
+		.value("VERTEX", TopologyType::VERTEX)
+		.value("LOOP", TopologyType::LOOP);
+
 	py::enum_<SurfaceFunction>(m, "SurfaceFunction")
 		.value("PLANE", SurfaceFunction::PLANE)
 		.value("CYLINDER", SurfaceFunction::CYLINDER)

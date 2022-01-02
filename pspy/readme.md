@@ -1,14 +1,16 @@
-# pspy
-
-## A Python wrapper for loading Parasolid parts
+# pspy - A Python wrapper for loading Parasolid parts
 
 This directory contains pspy, a Python wrapper that can
 load parts in the Parasolid transmit (.x_t) format.
+
+## Installivg pspy
 
 To run this, you must have a copy of Parasolid! Look at the
 `readme.md` files in `./parasolid` and `./parasolid/lib` for
 information on how to add your Parasolid distribution files
 to this repository in order to build pspy.
+
+This package also depends on pytorch to be installed.
 
 Once you have all of the necessary files in place, pspy can
 be installed with either

@@ -289,6 +289,7 @@ void Face::add_inferences_sphere(std::vector<Inference>& inferences)
     inf.inference_type = InferenceType::CENTER;
     inf.origin = Eigen::Vector3d(parameters[0], parameters[1], parameters[2]);
     inf.z_axis = Eigen::Vector3d(0.0, 0.0, 1.0);
+    inferences.push_back(inf);
 }
 void Face::add_inferences_axial(std::vector<Inference>& inferences)
 {

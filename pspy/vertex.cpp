@@ -25,5 +25,7 @@ std::vector<Inference> Vertex::get_inferences()
     inf.origin = position;
     inf.z_axis = Eigen::Vector3d(0.0, 0.0, 1.0);
 
+    inferences.push_back(inf);
+
     return inferences;
 }

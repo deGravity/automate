@@ -278,6 +278,8 @@ void Edge::add_inferences_line(std::vector<Inference>& inferences)
     inf.inference_type = InferenceType::MID_POINT;
     inf.origin = mid_point;
     inf.z_axis = Eigen::Vector3d(parameters[3], parameters[4], parameters[5]);
+
+    inferences.push_back(inf);
 }
 
 void Edge::add_inferences_other(std::vector<Inference>& inferences)
@@ -286,6 +288,8 @@ void Edge::add_inferences_other(std::vector<Inference>& inferences)
     inf.inference_type = InferenceType::MID_POINT;
     inf.origin = mid_point;
     inf.z_axis = Eigen::Vector3d(0.0, 0.0, 1.0);
+
+    inferences.push_back(inf);
 }
 
 void Edge::sample_points(const int num_points, const bool sample_tangents, std::vector<Eigen::VectorXd>& samples, Eigen::Vector2d& t_range)

@@ -1,0 +1,21 @@
+name: automate
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+  - nvidia
+  - pyg
+dependencies:
+  - python
+  - pytorch
+  - cudatoolkit
+  - pyg
+  - numpy
+  - pandas
+  - pytorch-lightning
+  - tensorboard
+  - pyarrow
+  - requests
+  - scipy
+  - matplotlib
+  - dotmap

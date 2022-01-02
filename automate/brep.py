@@ -1,0 +1,473 @@
+import torch_geometric as tg
+import torch
+import numpy as np
+from dotmap import DotMap
+from .conversions import torchify
+
+# Convert a pspy part object into a pytorch-geometric compatible
+# heterogeneous graph
+
+# We use a custom torch geometry data object to implement heterogeneous
+# graphs since pytorch geometric had not yet implemented them when
+# this project was started
+
+class PartFeatures:
+    r"""
+    Options for what to load into a BREP Graph Data Object
+    """
+    def __init__(self):
+        
+        # Topology Information
+        self.brep = True # Include Topology Level Information
+
+        self.face = FaceFeatures()
+        self.loop = LoopFeatures()
+        self.edge = EdgeFeatures()
+        self.vertex = VertexFeatures()
+
+        self.meta_paths = True # Face-Face edge set
+
+        # Include Mesh Data and Relation to BREP topology
+        self.mesh = True
+        self.mesh_to_topology = True
+
+        # Include Grid Samples
+        self.samples = True # Overrides other options
+        self.face_samples = True
+        self.normals = True
+        self.edge_samples = True
+        self.tangents = True
+
+        # Part Level Data
+        self.bounding_box = True
+        self.volume = True
+        self.center_of_gravity = True
+        self.moment_of_inertia = True
+        self.surface_area = True
+
+        # Mating Coordinate Frames
+        self.mcfs = True
+
+def to_flat(x):
+    r"""
+    Ensure input is a flat torch float tensor
+    """
+    number = (float, int, bool)
+    if isinstance(x, number):
+        return torch.tensor(x).float().reshape((1,))
+    if isinstance(x, np.ndarray):
+        return torch.from_numpy(x).flatten().float()
+    if torch.is_tensor(x):
+        return x.float().flatten()
+
+def to_index(x):
+    r"""
+    Ensure input is a torch long tensor (necessary for edge arrays)
+    """
+    if isinstance(x, int):
+        return torch.tensor(x).long().reshape((1,1))
+    if isinstance(x, np.ndarray):
+        return torch.from_numpy(x).long()
+    if torch.is_tensor(x):
+        return x.long()
+
+def pad_to(tensor, length):
+    return torch.cat([tensor, torch.zeros(length - tensor.size(0))]).float()
+
+class FaceFeatures:
+    r"""
+    Options for which features to load for each BREP Face
+    """
+    def __init__(self):
+        
+        self.parametric_function = True
+        self.parameter_values = True
+        self.exclude_origin = False
+
+        self.orientation = True
+
+        self.surface_area = True
+        self.circumference = True
+
+
+        self.bounding_box = True
+        self.na_bounding_box = True
+        self.center_of_gravity = True
+        self.moment_of_inertia = True
+
+FACE_PARAM_SIZE = 8 # The maximum parameter size for a face is 8
+                    # so we will pad all parameter arrays to size 8
+def featurize_face(f, options):
+    if not isinstance(f, dict):
+        f = DotMap(torchify(f))
+    feature_parts = []
+    if options.face.parametric_function:
+        feature_parts.append(
+            torch.nn.functional.one_hot(
+                torch.tensor(f.function.value), 
+                f.function.enum_size))
+        if options.face.parameter_values:
+            params = pad_to(f.parameters, FACE_PARAM_SIZE)
+            if options.face.exclude_origin:
+                params = params[3:]
+            feature_parts.append(params)
+    if options.face.orientation:
+        feature_parts.append(to_flat(f.orientation))
+    
+    if options.face.surface_area:
+        feature_parts.append(to_flat(f.surface_area))
+    if options.face.circumference:
+        feature_parts.append(to_flat(f.circumference))
+    if options.face.bounding_box:
+        feature_parts.append(to_flat(f.bounding_box))
+    if options.face.na_bounding_box:
+        feature_parts.append(to_flat(f.na_bounding_box))
+    if options.face.center_of_gravity:
+        feature_parts.append(to_flat(f.center_of_gravity))
+    if options.face.moment_of_inertia:
+        feature_parts.append(to_flat(f.moment_of_inertia))
+    
+    return torch.cat(feature_parts).flatten().float()
+
+
+class LoopFeatures:
+    r"""
+    Options for which features to load for each BREP Loop
+    """
+    def __init__(self):
+        self.type = True
+        self.length = True
+        self.na_bounding_box = True
+        self.center_of_gravity = True
+        self.moment_of_inertia = True
+
+def featurize_loop(l, options):
+    if not isinstance(l, dict):
+        l = DotMap(torchify(l))
+    feature_parts = []
+    if options.loop.type:
+        feature_parts.append(
+            torch.nn.functional.one_hot(
+                torch.tensor(l.type.value), 
+                l.type.enum_size))
+    
+    if options.loop.length:
+        feature_parts.append(to_flat(l.length))
+    if options.loop.na_bounding_box:
+        feature_parts.append(to_flat(l.na_bounding_box))
+    if options.loop.center_of_gravity:
+        feature_parts.append(to_flat(l.center_of_gravity))
+    if options.loop.moment_of_inertia:
+        feature_parts.append(to_flat(l.moment_of_inertia))
+    
+    return torch.cat(feature_parts).flatten().float()
+
+class EdgeFeatures:
+    r"""
+    Options for which features to load for each BREP Edge
+    """
+    def __init__(self):
+        # Parametric Definition
+        self.parametric_function = True
+        self.parameter_values = True
+        self.exclude_origin = False
+
+        self.t_range = True # Parametric Range
+
+        # 3D Start and End and Mid Points
+        self.start = True
+        self.end = True
+        self.mid_point = True
+
+        self.length = True
+
+        self.bounding_box = True
+        self.na_bounding_box = True
+
+        self.center_of_gravity = True
+        self.moment_of_inertia = True
+        
+
+EDGE_PARAM_SIZE = 8
+def featurize_edge(e, options):
+    if not isinstance(e, dict):
+        e = DotMap(torchify(e))
+    feature_parts = []
+    if options.edge.parametric_function:
+        feature_parts.append(
+            torch.nn.functional.one_hot(
+                torch.tensor(e.function.value), 
+                e.function.enum_size))
+        if options.edge.parameter_values:
+            params = pad_to(e.parameters, EDGE_PARAM_SIZE)
+            if options.edge.exclude_origin:
+                params = params[3:]
+            feature_parts.append(params)
+    
+    if options.edge.t_range:
+        feature_parts.append(to_flat(e.t_range))
+
+    if options.edge.length:
+        feature_parts.append(to_flat(e.length))
+
+    if options.edge.start:
+        feature_parts.append(to_flat(e.start))
+    if options.edge.end:
+        feature_parts.append(to_flat(e.end))
+    if options.edge.mid_point:
+        feature_parts.append(to_flat(e.mid_point))
+    
+    if options.edge.bounding_box:
+        feature_parts.append(to_flat(e.bounding_box))
+    if options.edge.na_bounding_box:
+        feature_parts.append(to_flat(e.na_bounding_box))
+    if options.edge.center_of_gravity:
+        feature_parts.append(to_flat(e.center_of_gravity))
+    if options.edge.moment_of_inertia:
+        feature_parts.append(to_flat(e.moment_of_inertia))
+    
+    return torch.cat(feature_parts).flatten().float()
+
+
+class VertexFeatures:
+    r"""
+    Options for which features to load for each BREP Vertex
+    """
+    def __init__(self):
+        self.position = True
+
+def featurize_vert(v, options):
+    if not isinstance(v, dict):
+        v = DotMap(torchify(v))
+    feature_parts = []
+    if options.vertex.position:
+        feature_parts.append(to_flat(v.position))
+    return torch.cat(feature_parts).flatten().float()
+
+def part_to_graph(part, options):
+    # Add dot (.) access to deserialized parts so they act more like pspy parts
+    if isinstance(part, dict):
+        part = DotMap(part)
+    
+    data = HetData()
+
+    # Keep track of which graph is which during batching
+    data.graph_idx = to_index(0)
+
+    # It is useful to have a unified "topology" node set for referencing
+    # arbitrary topological entities against. We essentially "stack"
+    # The 4 node types in this order [faces, edges, vertices, loops]
+    # Note that this is different than the normal order, for compatibility
+    # with older versions that did not consider loops
+    # Compute the number of each type of node, and the offsets for their
+    # indices in the global topology list
+    n_faces = len(part.brep.nodes.faces)
+    n_edges = len(part.brep.nodes.edges)
+    n_vertices = len(part.brep.nodes.vertices)
+    n_loops = len(part.brep.nodes.loops)
+    data.n_faces = torch.tensor(n_faces).long()
+    data.n_edges = torch.tensor(n_edges).long()
+    data.n_vertices = torch.tensor(n_vertices).long()
+    data.n_loops = torch.tensor(n_loops).long()
+
+    n_topos = n_faces + n_edges + n_vertices + n_loops
+    face_offset = 0
+    edge_offset = n_faces
+    vertex_offset = edge_offset + n_edges
+    loop_offset = vertex_offset + n_vertices
+    topo_offsets = [face_offset, edge_offset, vertex_offset, loop_offset]
+
+
+    # Setup Node Data
+    if options.brep:
+        face_features = [featurize_face(f, options) for f in part.brep.nodes.faces]
+        loop_features = [featurize_loop(f, options) for f in part.brep.nodes.loops]
+        edge_features = [featurize_edge(f, options) for f in part.brep.nodes.edges]
+        vert_features = [featurize_vert(f, options) for f in part.brep.nodes.vertices]
+
+        data.faces = torch.stack(face_features)
+        data.loops = torch.stack(loop_features)
+        data.edges = torch.stack(edge_features)
+        data.vertices = torch.stack(vert_features)
+
+        data.face_to_loop = to_index(part.brep.relations.face_to_loop)
+        data.__edge_sets__['face_to_loop'] = ['faces', 'loops']
+        data.loop_to_edge = to_index(part.brep.relations.loop_to_edge)
+        data.__edge_sets__['loop_to_edge'] = ['loops', 'edges']
+        data.edge_to_vertex = to_index(part.brep.relations.edge_to_vertex)
+        data.__edge_sets__['edge_to_vertex'] = ['edges', 'vertices']
+
+        if options.meta_paths:
+            data.face_to_face = to_index(part.brep.relations.face_to_face)
+            data.__edge_sets__['face_to_face'] = ['faces', 'faces', 'edges']
+        
+        # Add links to the flattened topology list
+        data.flat_topos = torch.empty((n_topos,0))
+        
+        data.face_to_flat_topos = torch.stack([
+            torch.arange(n_faces).long(),
+            torch.arange(n_faces).long() + face_offset
+        ])
+        data.__edge_sets__['face_to_flat_topos'] = ['faces', 'flat_topos']
+        
+        data.edge_to_flat_topos = torch.stack([
+            torch.arange(n_edges).long(),
+            torch.arange(n_edges).long() + edge_offset
+        ])
+        data.__edge_sets__['edge_to_flat_topos'] = ['edges', 'flat_topos']
+
+        data.loop_to_flat_topos = torch.stack([
+            torch.arange(n_loops).long(),
+            torch.arange(n_loops).long() + loop_offset
+        ])
+        data.__edge_sets__['loop_to_flat_topos'] = ['loops', 'flat_topos']
+
+        data.vertex_to_flat_topos = torch.stack([
+            torch.arange(n_vertices).long(),
+            torch.arange(n_vertices).long() + vertex_offset
+        ])
+        data.__edge_sets__['vertex_to_flat_topos'] = ['vertex', 'flat_topos']
+    
+    if options.mesh:
+        data.V = torchify(part.mesh.V).float()
+        data.F = torchify(part.mesh.F).long().T
+
+        num_faces = data.F.size(1)
+
+        # Only make edges into the brep if we have one
+        if options.mesh_to_topology and options.brep:
+            data.F_to_faces = torchify(part.mesh_topology.face_to_topology).long().reshape((1,-1))
+            data.__edge_sets__['F_to_faces'] = ['faces']
+            
+            # mesh_topology.edge_to_topology is formatted as a #Fx3 matrix
+            # that can contain -1 wherever there isn't a correspondence (e.g. mesh
+            # edges in the centers of topological faces). We need to remove these
+            # and format it as an edge set
+            # We do this by exanding out into a 3 x (3x #faces) tensor with
+            # face indices and positions explicit, then filter out the -1s
+            edge_to_topo = torchify(
+                part.mesh_topology.edge_to_topology).long().flatten()
+            face_idx = torch.arange(num_faces).repeat_interleave(3)
+            idx_in_face = torch.tensor([0,1,2]).long().repeat(num_faces)
+            E_to_edges = torch.stack([face_idx, idx_in_face, edge_to_topo])
+            E_to_edges = E_to_edges[:, (E_to_edges[2] != -1)]
+            data.E_to_edges = E_to_edges
+            data.__edge_sets__['E_to_edges'] = ['F', 3, 'faces']
+            
+            # Similar story with vetrices
+            vert_to_topo = torchify(
+                part.mesh_topology.point_to_topology).long().flatten()
+            vert_indices = torch.arange(vert_to_topo.size(0))
+            V_to_vertices = torch.stack([vert_indices, vert_to_topo])
+            data.V_to_vertices = V_to_vertices[:, (V_to_vertices[1] != -1)]
+            data.__edge_sets__['V_to_vertices'] = ['V', 'vertices']
+
+
+
+    # Setup Part-Level Data
+    part_feature_list = []
+    if options.volume:
+        part_feature_list.append(to_flat(part.summary.volume))
+    if options.surface_area:
+        part_feature_list.append(to_flat(part.summary.surface_area))
+    if options.center_of_gravity:
+        part_feature_list.append(to_flat(part.summary.center_of_gravity))
+    if options.bounding_box:
+        part_feature_list.append(to_flat(part.summary.bounding_box))
+    if options.moment_of_inertia:
+        part_feature_list.append(to_flat(part.summary.moment_of_inertia.flatten()))
+    
+    part_feature = torch.cat(part_feature_list).reshape((1,-1))
+
+    data.part_feat = part_feature
+
+    # Setup Samples
+    if options.samples:
+        if options.face_samples:
+            samples = part.samples.face_samples
+            if isinstance(samples, list):
+                samples = torchify(samples).float()
+            # Only use normals if the part object has them
+            has_normals = (samples.size(1) == 9)
+            if has_normals and not options.normals:
+                samples = samples[:,[0,1,2,8],:,:]
+            data.face_samples = samples
+        if options.edge_samples:
+            samples = part.samples.edge_samples
+            if isinstance(samples, list):
+                samples = torchify(samples).float()
+            # Only use tangents if the part object has them
+            has_tangents = (samples.size(1) == 7)
+            if has_tangents and not options.tangents:
+                samples = samples[:,:3,:]
+            data.edge_samples = samples
+
+    # Setup MCFs
+    if options.mcfs:
+        mcf_origins = []
+        mcf_axes = []
+        mcf_refs = []
+        for mcf in part.default_mcfs:
+            mcf_origins.append(mcf.origin)
+            mcf_axes.append(mcf.axis)
+
+            # torchify computes the size of enums, which we want for 
+            # one-hot encoding
+            axis_ref = mcf.ref.axis_ref
+            origin_ref = mcf.ref.origin_ref
+
+            axis_tt = axis_ref.reference_type.value
+            axis_ti = axis_ref.reference_index + topo_offsets[axis_tt]
+
+            origin_tt = origin_ref.reference_type.value
+            origin_ti = origin_ref.reference_index + topo_offsets[origin_tt]
+            origin_it = origin_ref.inference_type.value
+
+            mcf_refs.append([axis_ti, origin_ti, origin_it])
+
+        if len(mcf_axes) > 0 and isinstance(mcf_axes[0], np.ndarray):
+            mcf_axes = torch.from_numpy(np.stack(mcf_axes))
+            mcf_origins = torch.from_numpy(np.stack(mcf_origins))
+        else:
+            mcf_axes = torch.stack(mcf_axes)
+            mcf_origins = torch.stack(mcf_origins)
+        data.mcfs = torch.cat([
+            mcf_axes, 
+            mcf_origins],1).float()
+        
+        data.mcf_refs = torch.tensor(mcf_refs).long().T
+
+    return data
+
+class HetData(tg.data.Data):
+    r"""
+    An extension of pytorch-geometric's data objects that allows easier
+    configuration of heterogeneous graphs. Set __edge_sets__ to be a dictionary
+    where the keys are strings of the edge attribute names (e.g. 'edge_index'),
+    and the values are the string names of the node data tensors for the
+    src and dst sides of each edge.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.__edge_sets__ = {}
+
+    def __inc__(self, key, value, *args, **kwargs):
+        if key in self.__edge_sets__:
+            def get_sizes(nodes):
+                if isinstance(nodes, int):
+                    return nodes
+                if isinstance(nodes, str):
+                    if nodes in self.__edge_sets__:
+                        return self[nodes].size(1)
+                    return self[nodes].size(0)
+                if isinstance(nodes, list) or isinstance(nodes, tuple):
+                    return torch.tensor([[get_sizes(x)] for x in nodes])
+
+            return get_sizes(self.__edge_sets__[key])
+        return super().__inc__(key, value)
+
+    def __cat_dim__(self, key, value, *args, **kwargs):
+        if key in self.__edge_sets__:
+            return 1
+        return super().__cat_dim__(key, value)
