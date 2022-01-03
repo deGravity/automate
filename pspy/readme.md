@@ -3,7 +3,7 @@
 This directory contains pspy, a Python wrapper that can
 load parts in the Parasolid transmit (.x_t) format.
 
-## Installivg pspy
+## Installing pspy
 
 To run this, you must have a copy of Parasolid! Look at the
 `readme.md` files in `./parasolid` and `./parasolid/lib` for
