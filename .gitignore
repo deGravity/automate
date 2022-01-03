@@ -151,3 +151,6 @@ dmypy.json
 cython_debug/
 
 *.bak
+
+# Visual Studio
+enc_temp_folder/

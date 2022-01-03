@@ -194,7 +194,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 		.value("SWEPT", SurfaceFunction::SWEPT)
 		.value("BLENDSF", SurfaceFunction::BLENDSF)
 		.value("MESH", SurfaceFunction::MESH)
-		.value("FSURF", SurfaceFunction::FSURF);
+		.value("FSURF", SurfaceFunction::FSURF)
+		.value("NONE", SurfaceFunction::NONE);
 
 	py::enum_<CurveFunction>(m, "CurveFunction")
 		.value("LINE", CurveFunction::LINE)
@@ -206,7 +207,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 		.value("SPCURVE", CurveFunction::SPCURVE)
 		.value("TRCURVE", CurveFunction::TRCURVE)
 		.value("CPCURVE", CurveFunction::CPCURVE)
-		.value("PLINE", CurveFunction::PLINE);
+		.value("PLINE", CurveFunction::PLINE)
+		.value("NONE", CurveFunction::NONE);
 
 	py::enum_<LoopType>(m, "LoopType")
 		.value("VERTEX", LoopType::VERTEX)

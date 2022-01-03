@@ -24,7 +24,8 @@ enum class SurfaceFunction {
     SWEPT,
     BLENDSF,
     MESH,
-    FSURF
+    FSURF,
+    NONE // Faces sometimes have no surface
 };
 
 enum class CurveFunction {
@@ -37,7 +38,8 @@ enum class CurveFunction {
     SPCURVE,
     TRCURVE,
     CPCURVE,
-    PLINE
+    PLINE,
+    NONE // Edges sometimes have no curve
 };
 
 enum class LoopType {
@@ -82,7 +84,14 @@ struct MassProperties {
             c_of_g.data(),
             m_of_i.data(),
             &periphery);
-        assert(err == PK_ERROR_no_errors); // PK_TOPOL_eval_mass_props
+        assert(err == PK_ERROR_no_errors || err == PK_ERROR_missing_geom); // PK_TOPOL_eval_mass_props
+        if (err == PK_ERROR_missing_geom) {
+            amount = 0;
+            mass = 0;
+            c_of_g.setZero();
+            m_of_i = Eigen::MatrixXd::Zero(3, 3);
+            periphery = 0;
+        }
     }
     double amount;
     double mass;

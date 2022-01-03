@@ -16,9 +16,15 @@ Face::Face(int id) {
 
     err = PK_FACE_ask_oriented_surf(_id, &surface, &oriented);
     assert(err == PK_ERROR_no_errors); // PK_FACE_ask_oriented_surf
-
+    
     _surf = surface;
     orientation = oriented;
+    _has_surface = true;
+    if (surface == PK_ENTITY_null) {
+        _has_surface = false;
+        orientation = true; // arbitrary choice
+    }
+    
 
     init_parametric_function();
 
@@ -28,11 +34,15 @@ Face::Face(int id) {
 
     init_mass_props();
 
-    // TODO - Inferences
 }
 
 void Face::init_parametric_function() {
     PK_ERROR_t err = PK_ERROR_no_errors;
+
+    if (!_has_surface) {
+        function = SurfaceFunction::NONE;
+        return;
+    }
 
     PK_CLASS_t face_class;
     err = PK_ENTITY_ask_class(_surf, &face_class);
@@ -83,22 +93,44 @@ void Face::init_bb() {
     // Get Bounding Box
     PK_BOX_t box;
     err = PK_TOPOL_find_box(_id, &box);
-    assert(err == PK_ERROR_no_errors);
-    bounding_box.resize(2, 3);
-    bounding_box <<
-        box.coord[0], box.coord[1], box.coord[2],
-        box.coord[3], box.coord[3], box.coord[5];
+    assert(err == PK_ERROR_no_errors || err == PK_ERROR_missing_geom);
+    if (err == PK_ERROR_missing_geom) {
+        bounding_box = Eigen::MatrixXd::Zero(2, 3);
+    }
+    else {
+        bounding_box.resize(2, 3);
+        bounding_box <<
+            box.coord[0], box.coord[1], box.coord[2],
+            box.coord[3], box.coord[3], box.coord[5];
+    }
 }
 
 void Face::init_nabb() {
     PK_ERROR_t err = PK_ERROR_no_errors;
     // Get Non-Aligned Bounding Box
     // Axes are ordered so X is largest, Y is second largest, Z is smallest
+
+    if (!_has_surface) {
+        na_bb_center.setZero();
+        na_bb_x.setZero();
+        na_bb_z.setZero();
+        na_bounding_box = Eigen::MatrixXd::Zero(2, 3);
+        return;
+    }
+
     PK_NABOX_sf_t nabox;
     PK_TOPOL_find_nabox_o_t nabox_options;
     PK_TOPOL_find_nabox_o_m(nabox_options);
     err = PK_TOPOL_find_nabox(1, &_id, NULL, &nabox_options, &nabox);
-    assert(err == PK_ERROR_no_errors); // PK_TOPOL_find_nabox
+    assert(err == PK_ERROR_no_errors || err == PK_ERROR_missing_geom); // PK_TOPOL_find_nabox
+
+    if (err == PK_ERROR_missing_geom) {
+        na_bb_center.setZero();
+        na_bb_x.setZero();
+        na_bb_z.setZero();
+        na_bounding_box = Eigen::MatrixXd::Zero(2, 3);
+        return;
+    }
 
     na_bb_center <<
         nabox.basis_set.location.coord[0],
@@ -119,6 +151,13 @@ void Face::init_nabb() {
 }
 
 void Face::init_mass_props() {
+    if (!_has_surface) {
+        surface_area = 0;
+        center_of_gravity.setZero();
+        moment_of_inertia = Eigen::MatrixXd::Zero(3, 3);
+        circumference = 0;
+        return;
+    }
     auto m = MassProperties(&_id);
     surface_area = m.amount;
     center_of_gravity = m.c_of_g;
@@ -372,14 +411,14 @@ void Face::sample_points(
     PK_ERROR_t err = PK_ERROR_no_errors;
     PK_UVBOX_t uv_box;
     err = PK_FACE_find_uvbox(_id, &uv_box);
-    assert(err == PK_ERROR_no_errors);
+    //assert(err == PK_ERROR_no_errors || err == PK_ERROR_no_geometry); // Commented out because of error 900, we'll just return empty samples on an error
     uv_range.resize(2, 2);
     uv_range <<
         uv_box.param[0], uv_box.param[1],
         uv_box.param[2], uv_box.param[3];
 
     // Return Empty Samples if there is no surface
-    if (_surf == PK_ENTITY_null) {
+    if (_surf == PK_ENTITY_null || err != PK_ERROR_no_errors) {
         samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // x
         samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // y
         samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // z
@@ -391,6 +430,7 @@ void Face::sample_points(
             samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // pc_1
             samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // pc_2
         }
+        uv_range = Eigen::MatrixXd::Zero(2, 2);
         return;
     }
 
@@ -454,12 +494,31 @@ void Face::sample_points(
                     &pc_1,
                     &pc_2
                 );
-                assert(err == PK_ERROR_no_errors); // PK_SURF_eval_curvature
-                n_x(i, j) = normal.coord[0];
-                n_y(i, j) = normal.coord[1];
-                n_z(i, j) = normal.coord[2];
-                pc_grid_1(i, j) = pc_1;
-                pc_grid_2(i, j) = pc_2;
+
+                // Don't crash on a single evaluation error
+                // it's probably a singularity or an out-of-bounds
+                // sample on a wierd surface
+                assert(err == PK_ERROR_no_errors ||
+                    err == PK_ERROR_at_singularity ||
+                    err == PK_ERROR_bad_parameter ||
+                    err == PK_ERROR_eval_failure); // PK_SURF_eval_curvature
+                // Just set everything to 0 for the (rare) bad samples
+                if (err == PK_ERROR_at_singularity ||
+                    err == PK_ERROR_bad_parameter ||
+                    err == PK_ERROR_eval_failure) {
+                    n_x(i, j) = 0;
+                    n_y(i, j) = 0;
+                    n_z(i, j) = 0;
+                    pc_grid_1(i, j) = 0;
+                    pc_grid_2(i, j) = 0;
+                }
+                else {
+                    n_x(i, j) = normal.coord[0];
+                    n_y(i, j) = normal.coord[1];
+                    n_z(i, j) = normal.coord[2];
+                    pc_grid_1(i, j) = pc_1;
+                    pc_grid_2(i, j) = pc_2;
+                }
             }
         }
         if (!orientation) { // If the surface is reversed, flip normals and pcs

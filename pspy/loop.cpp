@@ -60,26 +60,32 @@ Loop::Loop(int id)
         PK_TOPOL_find_nabox_o_t nabox_options;
         PK_TOPOL_find_nabox_o_m(nabox_options);
         err = PK_TOPOL_find_nabox(num_edges, edges, NULL, &nabox_options, &nabox);
-        assert(err == PK_ERROR_no_errors); // PK_TOPOL_find_nabox
+        assert(err == PK_ERROR_no_errors || err == PK_ERROR_missing_geom); // PK_TOPOL_find_nabox
 
-        na_bb_center <<
-            nabox.basis_set.location.coord[0],
-            nabox.basis_set.location.coord[1],
-            nabox.basis_set.location.coord[2];
-        na_bb_x <<
-            nabox.basis_set.ref_direction.coord[0],
-            nabox.basis_set.ref_direction.coord[1],
-            nabox.basis_set.ref_direction.coord[2];
-        na_bb_z <<
-            nabox.basis_set.axis.coord[0],
-            nabox.basis_set.axis.coord[1],
-            nabox.basis_set.axis.coord[2];
-        na_bounding_box.resize(2, 3);
-        na_bounding_box <<
-            nabox.box.coord[0], nabox.box.coord[1], nabox.box.coord[2],
-            nabox.box.coord[3], nabox.box.coord[4], nabox.box.coord[5];
-
-
+        if (err == PK_ERROR_missing_geom) { // At least one curve is missing geometry
+            na_bb_center.setZero();
+            na_bb_x.setZero();
+            na_bb_z.setZero();
+            na_bounding_box = Eigen::MatrixXd::Zero(2, 3);
+        }
+        else {
+            na_bb_center <<
+                nabox.basis_set.location.coord[0],
+                nabox.basis_set.location.coord[1],
+                nabox.basis_set.location.coord[2];
+            na_bb_x <<
+                nabox.basis_set.ref_direction.coord[0],
+                nabox.basis_set.ref_direction.coord[1],
+                nabox.basis_set.ref_direction.coord[2];
+            na_bb_z <<
+                nabox.basis_set.axis.coord[0],
+                nabox.basis_set.axis.coord[1],
+                nabox.basis_set.axis.coord[2];
+            na_bounding_box.resize(2, 3);
+            na_bounding_box <<
+                nabox.box.coord[0], nabox.box.coord[1], nabox.box.coord[2],
+                nabox.box.coord[3], nabox.box.coord[4], nabox.box.coord[5];
+        }
     }
     else {
         length = 0;
@@ -113,6 +119,9 @@ std::vector<Inference> Loop::get_inferences()
         err = PK_FACE_ask_oriented_surf(face, &surf, &oriented);
         assert(err == PK_ERROR_no_errors); // PK_FACE_ask_surf
         PK_CLASS_t face_class;
+        if (surf == PK_ENTITY_null) {
+            return inferences;
+        }
         err = PK_ENTITY_ask_class(surf, &face_class);
         assert(err == PK_ERROR_no_errors);
         if (face_class == PK_CLASS_plane) {

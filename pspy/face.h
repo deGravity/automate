@@ -31,6 +31,7 @@ struct Face {
 
     int _id;
     int _surf;
+    bool _has_surface;
     SurfaceFunction function;
     std::vector<double> parameters;
     bool orientation;

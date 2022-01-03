@@ -49,6 +49,11 @@ Edge::Edge(int id) {
         assert(err == PK_ERROR_no_errors);
         mid_point = Eigen::Vector3d(p.coord[0], p.coord[1], p.coord[2]);
 
+        auto m = MassProperties(&_id);
+        length = m.amount;
+        center_of_gravity = m.c_of_g;
+        moment_of_inertia = m.m_of_i;
+
     }
     else {
         has_curve = false;
@@ -58,16 +63,20 @@ Edge::Edge(int id) {
         t_end = 0;
         is_periodic = false;
         mid_point = Eigen::Vector3d(0, 0, 0);
-    }
 
-    auto m = MassProperties(&_id);
-    length = m.amount;
-    center_of_gravity = m.c_of_g;
-    moment_of_inertia = m.m_of_i;
+        length = 0;
+        center_of_gravity.setZero();
+        moment_of_inertia = Eigen::MatrixXd::Zero(3, 3);
+    }
 
     init_bb();
 
     init_nabb();
+
+    if (!has_curve) {
+        function = CurveFunction::NONE;
+        return;
+    }
 
     switch (curve_class) {
     case PK_CLASS_line:
@@ -154,17 +163,31 @@ void Edge::init_bb() {
     // Get Bounding Box
     PK_BOX_t box;
     err = PK_TOPOL_find_box(_id, &box);
-    assert(err == PK_ERROR_no_errors);
-    bounding_box.resize(2, 3);
-bounding_box <<
-box.coord[0], box.coord[1], box.coord[2],
-box.coord[3], box.coord[3], box.coord[5];
+    assert(err == PK_ERROR_no_errors || err == PK_ERROR_missing_geom);
+    if (err == PK_ERROR_missing_geom) {
+        bounding_box = Eigen::MatrixXd::Zero(2, 3);
+    }
+    else {
+        bounding_box.resize(2, 3);
+        bounding_box <<
+            box.coord[0], box.coord[1], box.coord[2],
+            box.coord[3], box.coord[3], box.coord[5];
+    }
 }
 
 void Edge::init_nabb() {
     PK_ERROR_t err = PK_ERROR_no_errors;
     // Get Non-Aligned Bounding Box
     // Axes are ordered so X is largest, Y is second largest, Z is smallest
+
+    if (!has_curve) {
+        na_bb_center.setZero();
+        na_bb_x.setZero();
+        na_bb_z.setZero();
+        na_bounding_box = Eigen::MatrixXd::Zero(2, 3);
+        return;
+    }
+
     PK_NABOX_sf_t nabox;
     PK_TOPOL_find_nabox_o_t nabox_options;
     PK_TOPOL_find_nabox_o_m(nabox_options);
@@ -344,11 +367,25 @@ void Edge::sample_points(const int num_points, const bool sample_tangents, std::
                     &binormal,
                     &curvature
                 );
-                assert(err == PK_ERROR_no_errors); // PK_CURVE_eval_curvature
-                t_x(i) = tangent.coord[0];
-                t_y(i) = tangent.coord[1];
-                t_z(i) = tangent.coord[2];
-                c(i) = curvature;
+                assert(err == PK_ERROR_no_errors ||
+                        err == PK_ERROR_at_terminator ||
+                        err == PK_ERROR_bad_parameter ||
+                        err == PK_ERROR_eval_failure); // PK_CURVE_eval_curvature
+
+                if (err == PK_ERROR_at_terminator ||
+                    err == PK_ERROR_bad_parameter ||
+                    err == PK_ERROR_eval_failure) {
+                    t_x(i) = 0;
+                    t_y(i) = 0;
+                    t_z(i) = 0;
+                    c(i) = 0;
+                }
+                else {
+                    t_x(i) = tangent.coord[0];
+                    t_y(i) = tangent.coord[1];
+                    t_z(i) = tangent.coord[2];
+                    c(i) = curvature;
+                }
             }
         }
 

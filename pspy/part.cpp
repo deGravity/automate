@@ -418,14 +418,14 @@ void PartSummary::init(BREPTopology& topology, MassProperties& mass_props, Eigen
 	topo_type_counts(2) = topology.vertices.size();
 	topo_type_counts(3) = topology.loops.size(); // Put loops last to match old fingerprint
 
-	surface_type_counts.resize(12);
+	surface_type_counts.resize(13);
 	surface_type_counts.setZero();
 	for (auto& face : topology.faces) {
 		int f_idx = static_cast<int>(face.function);
 		surface_type_counts(f_idx) += 1;
 	}
 
-	curve_type_counts.resize(10);
+	curve_type_counts.resize(11);
 	curve_type_counts.setZero();
 	for (auto& edge : topology.edges) {
 		int f_idx = static_cast<int>(edge.function);
@@ -470,6 +470,39 @@ void PartUniqueInferences::init(const PartTopology& topo, double tolerance)
 
 	// Collect All Inferences for Deduplication
 	for (auto& t : topo.nodes.faces) {
+		for (auto& inf : t.inferences) {
+			all_origins.push_back(inf.origin);
+			all_axes.push_back(inf.axis);
+			Eigen::VectorXd frame(6);
+			frame.block<3, 1>(0, 0) = inf.origin;
+			frame.block<3, 1>(3, 0) = inf.axis;
+			all_frames.push_back(frame);
+			all_refs.push_back(inf.reference);
+		}
+	}
+	for (auto& t : topo.nodes.loops) {
+		for (auto& inf : t.inferences) {
+			all_origins.push_back(inf.origin);
+			all_axes.push_back(inf.axis);
+			Eigen::VectorXd frame(6);
+			frame.block<3, 1>(0, 0) = inf.origin;
+			frame.block<3, 1>(3, 0) = inf.axis;
+			all_frames.push_back(frame);
+			all_refs.push_back(inf.reference);
+		}
+	}
+	for (auto& t : topo.nodes.edges) {
+		for (auto& inf : t.inferences) {
+			all_origins.push_back(inf.origin);
+			all_axes.push_back(inf.axis);
+			Eigen::VectorXd frame(6);
+			frame.block<3, 1>(0, 0) = inf.origin;
+			frame.block<3, 1>(3, 0) = inf.axis;
+			all_frames.push_back(frame);
+			all_refs.push_back(inf.reference);
+		}
+	}
+	for (auto& t : topo.nodes.vertices) {
 		for (auto& inf : t.inferences) {
 			all_origins.push_back(inf.origin);
 			all_axes.push_back(inf.axis);

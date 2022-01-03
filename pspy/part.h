@@ -16,7 +16,7 @@ struct PartOptions {
 	bool sample_tangents = true;
 	bool tesselate = true;
 	bool default_mcfs = true;
-	bool default_mcfs_only_face_axes = true;
+	bool default_mcfs_only_face_axes = false;
 	bool onshape_style = true;
 	bool collect_inferences = true;
 };
@@ -187,8 +187,8 @@ struct MCF {
 struct Part {
 	Part(const std::string& path, PartOptions options = PartOptions());
 	void init_default_mcfs(
-		bool onshape_style = true, // only use onshape specific MCFs
-		bool just_face_axes = true // limit to MCFs with face-based axes
+		bool onshape_style, // only use onshape specific MCFs
+		bool just_face_axes // limit to MCFs with face-based axes
 	);
 	Mesh mesh;
 	MeshTopology mesh_topology;
