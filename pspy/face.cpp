@@ -422,7 +422,6 @@ void Face::sample_points(
         samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // x
         samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // y
         samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // z
-        samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // mask
         if (sample_normals) {
             samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // n_x
             samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // n_y
@@ -430,6 +429,8 @@ void Face::sample_points(
             samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // pc_1
             samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // pc_2
         }
+        samples.push_back(Eigen::MatrixXd::Zero(num_points, num_points)); // mask
+        
         uv_range = Eigen::MatrixXd::Zero(2, 2);
         return;
     }
