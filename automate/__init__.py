@@ -1,6 +1,6 @@
 from .conversions import jsonify, torchify
 from .brep import PartFeatures, part_to_graph, HetData
-from .sbgcn import SBGCN
+from .sbgcn import SBGCN, LinearBlock
 
 __all__ = [
     'jsonify', 
@@ -8,5 +8,6 @@ __all__ = [
     'PartFeatures', 
     'part_to_graph', 
     'HetData', 
-    'SBGCN'
+    'SBGCN',
+    'LinearBlock'
     ]

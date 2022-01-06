@@ -68,17 +68,17 @@ class SBGCN(torch.nn.Module):
         # Flatten Topology Representations
         n_topos = x_f.size(0) + x_l.size(0) + x_e.size(0) + x_v.size(0)
         n_feats = x_f.size(1)
-        x = torch.zeros((n_topos, n_feats)).type_as(x_f)
+        x_t = torch.zeros((n_topos, n_feats)).type_as(x_f)
         
-        x[data.face_to_flat_topos[1]] = x_f[data.face_to_flat_topos[0]]
-        x[data.edge_to_flat_topos[1]] = x_e[data.edge_to_flat_topos[0]]
-        x[data.vertex_to_flat_topos[1]] = x_v[data.vertex_to_flat_topos[0]]
-        x[data.loop_to_flat_topos[1]] = x_l[data.loop_to_flat_topos[0]]
+        x_t[data.face_to_flat_topos[1]] = x_f[data.face_to_flat_topos[0]]
+        x_t[data.edge_to_flat_topos[1]] = x_e[data.edge_to_flat_topos[0]]
+        x_t[data.vertex_to_flat_topos[1]] = x_v[data.vertex_to_flat_topos[0]]
+        x_t[data.loop_to_flat_topos[1]] = x_l[data.loop_to_flat_topos[0]]
 
         # Global Pool
-        x_p = tg.nn.global_max_pool(x, data.graph_idx.flatten())
+        x_p = tg.nn.global_max_pool(x_t, data.graph_idx.flatten())
 
-        return x, x_p
+        return x_t, x_p, x_f, x_l, x_e, x_v
 
 class BipartiteResMRConv(torch.nn.Module):
     def __init__(self, width):
@@ -106,7 +106,7 @@ class LinearBlock(torch.nn.Module):
             c_out = layer_sizes[i + 1]
 
             layers.append(Linear(c_in, c_out))
-            if last_linear and i+1 >= len(layer_sizes):
+            if last_linear and i+1 >= len(layer_sizes) - 1:
                 break
             if batch_norm:
                 layers.append(BatchNorm1d(c_out))

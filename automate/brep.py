@@ -302,7 +302,8 @@ def part_to_graph(part, options):
             data.__edge_sets__['face_to_face'] = ['faces', 'faces', 'edges']
         
         # Add links to the flattened topology list
-        data.flat_topos = torch.empty((n_topos,0))
+        data.flat_topos = torch.empty((n_topos,0)).float()
+        data.num_nodes = n_topos
         
         data.face_to_flat_topos = torch.stack([
             torch.arange(n_faces).long(),
@@ -326,7 +327,7 @@ def part_to_graph(part, options):
             torch.arange(n_vertices).long(),
             torch.arange(n_vertices).long() + vertex_offset
         ])
-        data.__edge_sets__['vertex_to_flat_topos'] = ['vertex', 'flat_topos']
+        data.__edge_sets__['vertex_to_flat_topos'] = ['vertices', 'flat_topos']
     
     if options.mesh:
         data.V = torchify(part.mesh.V).float()
