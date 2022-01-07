@@ -541,13 +541,24 @@ void Face::sample_points(
     PK_FACE_contains_vectors_o_t contains_vectors_opt;
     PK_FACE_contains_vectors_o_m(contains_vectors_opt);
     contains_vectors_opt.is_on_surf = PK_LOGICAL_true;
-    contains_vectors_opt.n_vectors = 100;
-    contains_vectors_opt.vectors = points;
+    PK_UV_t *uv_grid = new PK_UV_t[num_points*num_points];
+    int k = 0; 
+    for (int i = 0; i < num_points; ++i) {
+            for (int j = 0; j < num_points; ++j) {
+                double u = u_samples[i];
+                double v = v_samples[j];
+                uv_grid[k].param[0] = u;
+                uv_grid[k].param[1] = v;
+                ++k;
+            }
+    }
+    contains_vectors_opt.n_uvs = num_points*num_points;
+    contains_vectors_opt.uvs = uv_grid;
     err = PK_FACE_contains_vectors(_id, &contains_vectors_opt, point_topos);
     assert(err == PK_ERROR_no_errors); // PK_FACE_contains_vectors
 
     Eigen::MatrixXd mask(num_points, num_points);
-    int k = 0;
+    k = 0;
     for (int v = 0; v < num_points; ++v) {
         for (int u = 0; u < num_points; ++u) {
             mask(u, v) = (point_topos[k] == NULL) ? 0.0 : 1.0;
@@ -558,4 +569,5 @@ void Face::sample_points(
 
     delete[] points;
     delete[] point_topos;
+    delete[] uv_grid;
 }
