@@ -7,6 +7,7 @@
 
 #include <parasolid.h>
 #include <assert.h>
+#include <float.h>
 
 Edge::Edge(int id) {
     _id = id;
