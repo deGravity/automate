@@ -7,8 +7,8 @@ channels:
   - pyg
 dependencies:
   - python
-  - pytorch
   - cudatoolkit
+  - pytorch>=1.10
   - pyg
   - numpy
   - pandas
