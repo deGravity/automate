@@ -147,7 +147,7 @@ void Edge::init_ellipse() {
     PK_ELLIPSE_sf_t ellipse_sf;
     err = PK_ELLIPSE_ask(_curve, &ellipse_sf);
     assert(err == PK_ERROR_no_errors); // PK_ELLIPSE_ask
-    function = CurveFunction::LINE;
+    function = CurveFunction::ELLIPSE;
     parameters.push_back(ellipse_sf.basis_set.location.coord[0]);
     parameters.push_back(ellipse_sf.basis_set.location.coord[1]);
     parameters.push_back(ellipse_sf.basis_set.location.coord[2]);
