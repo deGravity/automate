@@ -1,14 +1,14 @@
 name: automate
 channels:
+  - pytorch
+  - pyg
   - defaults
   - conda-forge
-  - pytorch
-  - nvidia
-  - pyg
+  
 dependencies:
   - python
-  - cudatoolkit
-  - pytorch>=1.10
+  - cudatoolkit=10.2
+  - pytorch=1.10
   - pyg
   - numpy
   - pandas
@@ -19,3 +19,5 @@ dependencies:
   - scipy
   - matplotlib
   - dotmap
+  - meshplot
+  - ipykernel
