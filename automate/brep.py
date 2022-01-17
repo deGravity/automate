@@ -286,9 +286,13 @@ def part_to_graph(part, options):
         vert_features = [featurize_vert(f, options) for f in part.brep.nodes.vertices]
 
         data.faces = torch.stack(face_features)
+        data.__node_sets__.add('faces')
         data.loops = torch.stack(loop_features)
         data.edges = torch.stack(edge_features)
-        data.vertices = torch.stack(vert_features)
+        if len(vert_features) > 0:
+            data.vertices = torch.stack(vert_features)
+        else: 
+            data.vertices = torch.empty((0,3)).float()
 
         data.face_to_loop = to_index(part.brep.relations.face_to_loop)
         data.__edge_sets__['face_to_loop'] = ['faces', 'loops']
@@ -378,9 +382,10 @@ def part_to_graph(part, options):
     if options.moment_of_inertia:
         part_feature_list.append(to_flat(part.summary.moment_of_inertia.flatten()))
     
-    part_feature = torch.cat(part_feature_list).reshape((1,-1))
+    if len(part_feature_list) > 0:
+        part_feature = torch.cat(part_feature_list).reshape((1,-1))
 
-    data.part_feat = part_feature
+        data.part_feat = part_feature
 
     # Setup Samples
     if options.samples:
@@ -393,6 +398,7 @@ def part_to_graph(part, options):
             if has_normals and not options.normals:
                 samples = samples[:,[0,1,2,8],:,:]
             data.face_samples = samples
+            data.__node_sets__.add('face_samples')
         if options.edge_samples:
             samples = part.samples.edge_samples
             if isinstance(samples, list):
@@ -446,12 +452,14 @@ class HetData(tg.data.Data):
     configuration of heterogeneous graphs. Set __edge_sets__ to be a dictionary
     where the keys are strings of the edge attribute names (e.g. 'edge_index'),
     and the values are the string names of the node data tensors for the
-    src and dst sides of each edge.
+    src and dst sides of each edge. Optionally set __node_sets__ to contain
+    names of node sets (useful for overriding pygeo defaults like 'faces')
     """
 
     def __init__(self):
         super().__init__()
         self.__edge_sets__ = {}
+        self.__node_sets__ = set()
 
     def __inc__(self, key, value, *args, **kwargs):
         if key in self.__edge_sets__:
@@ -466,9 +474,13 @@ class HetData(tg.data.Data):
                     return torch.tensor([[get_sizes(x)] for x in nodes])
 
             return get_sizes(self.__edge_sets__[key])
+        if key in self.__node_sets__:
+            return 0
         return super().__inc__(key, value)
 
     def __cat_dim__(self, key, value, *args, **kwargs):
         if key in self.__edge_sets__:
             return 1
+        elif key in self.__node_sets__:
+            return 0
         return super().__cat_dim__(key, value)
