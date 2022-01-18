@@ -76,7 +76,7 @@ class SBGCN(torch.nn.Module):
         x_t[data.loop_to_flat_topos[1]] = x_l[data.loop_to_flat_topos[0]]
 
         # Global Pool
-        x_p = tg.nn.global_max_pool(x_t, data.graph_idx.flatten())
+        x_p = tg.nn.global_max_pool(x_t, data.flat_topos_to_graph_idx.flatten())
 
         return x_t, x_p, x_f, x_l, x_e, x_v
 

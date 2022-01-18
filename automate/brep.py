@@ -3,6 +3,64 @@ import torch
 import numpy as np
 from dotmap import DotMap
 from .conversions import torchify
+HAVE_PARASOLID = True
+try:
+    import pspy
+except:
+    HAVE_PARASOLID = False
+import json
+import os
+
+class PartDataset(torch.utils.data.Dataset):
+    def __init__(
+        self,
+        splits_path,
+        data_dir,
+        mode = 'train',
+        cache_dir = None,
+        part_options = None,
+        graph_options = None
+    ):
+        super().__init__()
+        self.splits_path = splits_path
+        self.mode = mode
+        self.cache_dir = cache_dir
+        self.data_dir = data_dir
+
+        if self.cache_dir is not None:
+            os.makedirs(os.path.join(self.cache_dir, self.mode), exist_ok=True)
+        
+        with open(splits_path, 'r') as f:
+            splits = json.load(f)
+        self.part_paths = splits[self.mode]
+
+        if HAVE_PARASOLID:
+            self.options = pspy.PartOptions() if part_options is None else part_options
+        else:
+            self.options = None
+        self.features = PartFeatures() if graph_options is None else graph_options
+    
+    def __getitem__(self, idx):
+        if isinstance(idx, slice):
+            return [self[i] for i in range(len(self.part_paths))[idx]]
+        if not self.cache_dir is None:
+            cache_file = os.path.join(self.cache_dir, self.mode, f'{idx}.pt')
+            if os.path.exists(cache_file):
+                return torch.load(cache_file)
+        part_path = os.path.join(self.data_dir, self.part_paths[idx])
+        if part_path.endswith('.pt'):
+            part = torch.load(part_path)
+        elif HAVE_PARASOLID:
+            part = pspy.Part(part_path, self.options)
+        else:
+            raise NotImplementedError(f'Cannot open {part_path}: Parasolid extension pspy not installed.')
+        graph = part_to_graph(part, self.features)
+        if not self.cache_dir is None:
+            torch.save(graph, cache_file)
+        return graph
+
+    def __len__(self):
+        return len(self.part_paths)
 
 # Convert a pspy part object into a pytorch-geometric compatible
 # heterogeneous graph
@@ -72,6 +130,8 @@ def to_index(x):
         return x.long()
 
 def pad_to(tensor, length):
+    if isinstance(tensor, list):
+        return pad_to(torch.tensor(tensor), length)
     return torch.cat([tensor, torch.zeros(length - tensor.size(0))]).float()
 
 class FaceFeatures:
@@ -308,6 +368,8 @@ def part_to_graph(part, options):
         # Add links to the flattened topology list
         data.flat_topos = torch.empty((n_topos,0)).float()
         data.num_nodes = n_topos
+        data.flat_topos_to_graph_idx = torch.zeros((1,n_topos)).long()
+        data.__edge_sets__['flat_topos_to_graph_idx'] = ['flat_topos']
         
         data.face_to_flat_topos = torch.stack([
             torch.arange(n_faces).long(),
@@ -445,6 +507,7 @@ def part_to_graph(part, options):
         data.mcf_refs = torch.tensor(mcf_refs).long().T
 
     return data
+
 
 class HetData(tg.data.Data):
     r"""
