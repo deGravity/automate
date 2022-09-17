@@ -1,6 +1,8 @@
 #ifndef DISJOINTSET_INCLUDED
 #define DISJOINTSET_INCLUDED 1
 
+namespace pspy {
+
 struct DisjointSet
 {
 public:
@@ -13,5 +15,7 @@ public:
 private:
 	int* _id;
 };
+
+}
 
 #endif // !DISJOINTSET_INCLUDED

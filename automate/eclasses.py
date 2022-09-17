@@ -1,5 +1,5 @@
 import torch
-from pspy_cpp import find_equivalence_classes
+from automate_cpp import find_equivalence_classes
 import numpy as np
 import pandas as pd
 

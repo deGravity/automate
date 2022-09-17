@@ -6,12 +6,16 @@
 #include <vector>
 #include "body.h"
 
+namespace pspy {
 struct PartOptions {
 	bool just_bb = false;
 	bool normalize = false;
 	bool transform = false;
 	Eigen::Matrix<double, 4, 4> transform_matrix;
 	int num_uv_samples = 10;
+	int num_random_samples = 0;
+	int num_sdf_samples = 0;
+	int sdf_sample_quality = 5000;
 	bool sample_normals = true;
 	bool sample_tangents = true;
 	bool tesselate = true;
@@ -52,11 +56,11 @@ struct PartInference {
 };
 
 struct PartFace {
-	PartFace(Face& f, int i);
+	PartFace(std::shared_ptr<Face>& f, int i);
 	int index;
 	SurfaceFunction function;
 	std::vector<double> parameters;
-	bool orientation;
+	bool orientation; // True is face normal matches surface normal
 	Eigen::MatrixXd bounding_box;
 	Eigen::MatrixXd na_bounding_box;
 	double surface_area;
@@ -72,7 +76,7 @@ struct PartFace {
 };
 
 struct PartLoop {
-	PartLoop(Loop& l, int i);
+	PartLoop(std::shared_ptr<Loop>& l, int i);
 	int index;
 	LoopType type;
 	double length;
@@ -87,10 +91,11 @@ struct PartLoop {
 };
 
 struct PartEdge {
-	PartEdge(Edge& e, int i);
+	PartEdge(std::shared_ptr<Edge>& e, int i);
 	int index;
 	CurveFunction function;
 	std::vector<double> parameters;
+	bool orientation; // true is edge direction matches curve direction
 	Eigen::VectorXd t_range;
 	Eigen::Vector3d start;
 	Eigen::Vector3d end;
@@ -108,7 +113,7 @@ struct PartEdge {
 };
 
 struct PartVertex {
-	PartVertex(Vertex& v, int i);
+	PartVertex(std::shared_ptr<Vertex>& v, int i);
 	int index;
 	Eigen::Vector3d position;
 
@@ -141,6 +146,20 @@ struct PartSamples {
 	void init(BREPTopology& topology, PartOptions options);
 	std::vector< std::vector< Eigen::MatrixXd> > face_samples;
 	std::vector< std::vector< Eigen::VectorXd> > edge_samples;
+};
+
+struct PartRandomSamples {
+	void init(BREPTopology& topology, PartOptions options);
+	std::vector<Eigen::MatrixXd> samples;
+	std::vector<Eigen::MatrixXd> coords;
+	std::vector<Eigen::MatrixXd> uv_box;
+};
+
+struct PartMaskSDF {
+	void init(BREPTopology& topology, PartOptions options);
+	std::vector<Eigen::MatrixXd> coords;
+	std::vector<Eigen::VectorXd> sdf;
+	std::vector<Eigen::MatrixXd> uv_box;
 };
 
 struct PartSummary {
@@ -194,10 +213,14 @@ struct Part {
 	MeshTopology mesh_topology;
 	PartTopology brep;
 	PartSamples samples;
+	PartRandomSamples random_samples;
+	PartMaskSDF mask_sdf;
 	PartSummary summary;
 	PartUniqueInferences inferences;
 	std::vector<MCF> default_mcfs;
 	bool _is_valid;
 };
+
+}
 
 #endif // !PART_H_INCLUDED

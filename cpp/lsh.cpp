@@ -1,5 +1,7 @@
 #include "lsh.h"
 
+namespace pspy {
+
 long primes[16] = { 
 	73856093, 
 	19349669, 
@@ -66,4 +68,6 @@ std::set<unsigned int> LSH::get_nearest_points(const Eigen::VectorXd& point) con
 		}
 	}
 	return nearestPoints;
+}
+
 }

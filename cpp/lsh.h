@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <set>
 
+namespace pspy {
 class LSH {
 public:
 	LSH(const std::vector<Eigen::VectorXd>& points, int nDimensions, double tolerance);
@@ -18,5 +19,7 @@ private:
 	double tolerance_;
 	int nDimensions_;
 };
+
+}
 
 #endif // !LSH_INCLUDED

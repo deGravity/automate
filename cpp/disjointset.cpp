@@ -1,5 +1,7 @@
 #include "disjointset.h"
 
+namespace pspy {
+
 DisjointSet::DisjointSet(const int size)
 {
 	_id = new int[size];
@@ -42,4 +44,6 @@ void DisjointSet::unite(int p, int q)
 bool DisjointSet::find(int p, int q)
 {
 	return root(p) == root(q);
+}
+
 }

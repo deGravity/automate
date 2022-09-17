@@ -4,17 +4,19 @@
 #include <set>
 #include <map>
 
+namespace pspy {
+
 Part::Part(const std::string& path, PartOptions options)
 {
-	auto bodies = read_xt(path);
+	auto bodies = read_file(path);
 	if (bodies.size() != 1) {
 		_is_valid = false;
 		return;
 	}
 	_is_valid = true;
-	Body& body = bodies[0];
-
-	auto bounding_box = body.GetBoundingBox();
+	auto& body = bodies[0];
+	
+	auto bounding_box = body->GetBoundingBox();
 
 	if (options.just_bb) {
 		summary.bounding_box = bounding_box;
@@ -35,19 +37,20 @@ Part::Part(const std::string& path, PartOptions options)
 			0, 0, 0, scale;
 	}
 	if (options.transform) {
-		int err = body.Transform(options.transform_matrix);
+		int err = body->Transform(options.transform_matrix);
 		if (err != 0) {
 			_is_valid = false;
 			return;
 		}
-		bounding_box = body.GetBoundingBox();
+		bounding_box = body->GetBoundingBox();
 	}
-
-	auto topology = body.GetTopology();
-	auto mass_properties = body.GetMassProperties();
+	
+	auto topology = body->GetTopology();
+	
+	auto mass_properties = body->GetMassProperties();
 	
 	if (options.tesselate) {
-		body.Tesselate(
+		body->Tesselate(
 			mesh.V,
 			mesh.F,
 			mesh_topology.face_to_topology,
@@ -57,13 +60,22 @@ Part::Part(const std::string& path, PartOptions options)
 	}
 
 	brep.init(topology);
-
+	
+	
 	if (options.num_uv_samples > 0) {
 		samples.init(topology, options);
 	}
 
-	summary.init(topology, mass_properties, bounding_box);
+	if (options.num_random_samples > 0) {
+		random_samples.init(topology, options);
+	}
 
+	if (options.num_sdf_samples > 0) {
+		mask_sdf.init(topology, options);
+	}
+	
+	summary.init(topology, mass_properties, bounding_box);
+	
 	if (options.collect_inferences) {
 		inferences.init(brep);
 	}
@@ -71,7 +83,7 @@ Part::Part(const std::string& path, PartOptions options)
 	if (options.default_mcfs) {
 		init_default_mcfs(options.onshape_style, options.default_mcfs_only_face_axes);
 	}
-
+	
 }
 
 void Part::init_default_mcfs(bool onshape_style, bool just_face_axes)
@@ -241,18 +253,18 @@ void PartTopologyRelations::init(BREPTopology& topology)
 		loop_to_edge(1, i) = topology.loop_to_edge[i]._child;
 	}
 
-edge_to_vertex.resize(2, topology.edge_to_vertex.size());
-for (int i = 0; i < topology.edge_to_vertex.size(); ++i) {
-	edge_to_vertex(0, i) = topology.edge_to_vertex[i]._parent;
-	edge_to_vertex(1, i) = topology.edge_to_vertex[i]._child;
-}
+	edge_to_vertex.resize(2, topology.edge_to_vertex.size());
+	for (int i = 0; i < topology.edge_to_vertex.size(); ++i) {
+		edge_to_vertex(0, i) = topology.edge_to_vertex[i]._parent;
+		edge_to_vertex(1, i) = topology.edge_to_vertex[i]._child;
+	}
 
-face_to_face.resize(3, topology.face_to_face.size());
-for (int i = 0; i < topology.face_to_face.size(); ++i) {
-	face_to_face(0, i) = std::get<0>(topology.face_to_face[i]);
-	face_to_face(1, i) = std::get<1>(topology.face_to_face[i]);
-	face_to_face(2, i) = std::get<2>(topology.face_to_face[i]);
-}
+	face_to_face.resize(3, topology.face_to_face.size());
+	for (int i = 0; i < topology.face_to_face.size(); ++i) {
+		face_to_face(0, i) = std::get<0>(topology.face_to_face[i]);
+		face_to_face(1, i) = std::get<1>(topology.face_to_face[i]);
+		face_to_face(2, i) = std::get<2>(topology.face_to_face[i]);
+	}
 }
 
 void PartTopologyNodes::init(BREPTopology& topology)
@@ -298,24 +310,24 @@ void PartTopologyNodes::init(BREPTopology& topology)
 
 }
 
-PartFace::PartFace(Face& f, int i)
+PartFace::PartFace(std::shared_ptr<Face>& f, int i)
 {
 	index = i;
-	function = f.function;
-	parameters = f.parameters;
-	orientation = f.orientation;
-	bounding_box = f.bounding_box;
+	function = f->function;
+	parameters = f->parameters;
+	orientation = f->orientation;
+	bounding_box = f->bounding_box;
 	na_bounding_box.resize(5, 3);
-	na_bounding_box.block<1, 3>(0, 0) = f.na_bb_center;
-	na_bounding_box.block<1, 3>(1, 0) = f.na_bb_x;
-	na_bounding_box.block<1, 3>(2, 0) = f.na_bb_z;
-	na_bounding_box.block<2, 3>(3, 0) = f.na_bounding_box;
-	surface_area = f.surface_area;
-	circumference = f.circumference;
-	center_of_gravity = f.center_of_gravity;
-	moment_of_inertia = f.moment_of_inertia;
+	na_bounding_box.block<1, 3>(0, 0) = f->na_bb_center;
+	na_bounding_box.block<1, 3>(1, 0) = f->na_bb_x;
+	na_bounding_box.block<1, 3>(2, 0) = f->na_bb_z;
+	na_bounding_box.block<2, 3>(3, 0) = f->na_bounding_box;
+	surface_area = f->surface_area;
+	circumference = f->circumference;
+	center_of_gravity = f->center_of_gravity;
+	moment_of_inertia = f->moment_of_inertia;
 
-	auto infs = f.get_inferences();
+	auto infs = f->get_inferences();
 	inferences.reserve(infs.size());
 	for (auto& inf : infs) {
 		inferences.emplace_back(inf, TopologyType::FACE, index);
@@ -323,62 +335,63 @@ PartFace::PartFace(Face& f, int i)
 
 }
 
-PartLoop::PartLoop(Loop& l, int i)
+PartLoop::PartLoop(std::shared_ptr<Loop>& l, int i)
 {
 	index = i;
-	type = l._type;
-	length = l.length;
-	center_of_gravity = l.center_of_gravity;
-	moment_of_inertia = l.moment_of_inertia;
+	type = l->_type;
+	length = l->length;
+	center_of_gravity = l->center_of_gravity;
+	moment_of_inertia = l->moment_of_inertia;
 
 	na_bounding_box.resize(5, 3);
-	na_bounding_box.block<1, 3>(0, 0) = l.na_bb_center;
-	na_bounding_box.block<1, 3>(1, 0) = l.na_bb_x;
-	na_bounding_box.block<1, 3>(2, 0) = l.na_bb_z;
-	na_bounding_box.block<2, 3>(3, 0) = l.na_bounding_box;
+	na_bounding_box.block<1, 3>(0, 0) = l->na_bb_center;
+	na_bounding_box.block<1, 3>(1, 0) = l->na_bb_x;
+	na_bounding_box.block<1, 3>(2, 0) = l->na_bb_z;
+	na_bounding_box.block<2, 3>(3, 0) = l->na_bounding_box;
 
-	auto infs = l.get_inferences();
+	auto infs = l->get_inferences();
 	inferences.reserve(infs.size());
 	for (auto& inf : infs) {
 		inferences.emplace_back(inf, TopologyType::LOOP, index);
 	}
 }
 
-PartEdge::PartEdge(Edge& e, int i)
+PartEdge::PartEdge(std::shared_ptr<Edge>& e, int i)
 {
 	index = i;
-	function = e.function;
-	parameters = e.parameters;
+	function = e->function;
+	parameters = e->parameters;
+	orientation = !e->_is_reversed;
 	t_range.resize(2);
-	t_range(0) = e.t_start;
-	t_range(1) = e.t_end;
-	start = e.start;
-	end = e.end;
-	is_periodic = e.is_periodic;
-	mid_point = e.mid_point;
-	length = e.length;
-	center_of_gravity = e.center_of_gravity;
-	moment_of_inertia = e.moment_of_inertia;
-	bounding_box = e.bounding_box;
+	t_range(0) = e->t_start;
+	t_range(1) = e->t_end;
+	start = e->start;
+	end = e->end;
+	is_periodic = e->is_periodic;
+	mid_point = e->mid_point;
+	length = e->length;
+	center_of_gravity = e->center_of_gravity;
+	moment_of_inertia = e->moment_of_inertia;
+	bounding_box = e->bounding_box;
 	na_bounding_box.resize(5, 3);
-	na_bounding_box.block<1, 3>(0, 0) = e.na_bb_center;
-	na_bounding_box.block<1, 3>(1, 0) = e.na_bb_x;
-	na_bounding_box.block<1, 3>(2, 0) = e.na_bb_z;
-	na_bounding_box.block<2, 3>(3, 0) = e.na_bounding_box;
+	na_bounding_box.block<1, 3>(0, 0) = e->na_bb_center;
+	na_bounding_box.block<1, 3>(1, 0) = e->na_bb_x;
+	na_bounding_box.block<1, 3>(2, 0) = e->na_bb_z;
+	na_bounding_box.block<2, 3>(3, 0) = e->na_bounding_box;
 
-	auto infs = e.get_inferences();
+	auto infs = e->get_inferences();
 	inferences.reserve(infs.size());
 	for (auto& inf : infs) {
 		inferences.emplace_back(inf, TopologyType::EDGE, index);
 	}
 }
 
-PartVertex::PartVertex(Vertex& v, int i)
+PartVertex::PartVertex(std::shared_ptr<Vertex>& v, int i)
 {
 	index = i;
-	position = v.position;
+	position = v->position;
 
-	auto infs = v.get_inferences();
+	auto infs = v->get_inferences();
 	inferences.reserve(infs.size());
 	for (auto& inf : infs) {
 		inferences.emplace_back(inf, TopologyType::VERTEX, index);
@@ -393,15 +406,43 @@ void PartSamples::init(BREPTopology& topology, PartOptions options)
 	Eigen::MatrixXd uv_box;
 	face_samples.resize(topology.faces.size());
 	for (int i = 0; i < topology.faces.size(); ++i) {
-		topology.faces[i].sample_points(num_points, sample_normals, face_samples[i], uv_box);
+		topology.faces[i]->sample_points(num_points, sample_normals, face_samples[i], uv_box);
 	}
 
 	Eigen::Vector2d t_range;
 	edge_samples.resize(topology.edges.size());
 	for (int i = 0; i < topology.edges.size(); ++i) {
-		topology.edges[i].sample_points(num_points, sample_tangents, edge_samples[i], t_range);
+		topology.edges[i]->sample_points(num_points, sample_tangents, edge_samples[i], t_range);
 	}
 }
+
+void PartRandomSamples::init(BREPTopology& topology, PartOptions options)
+{
+	const int num_points = options.num_random_samples;
+	const int n_faces = topology.faces.size();
+	samples.resize(n_faces);
+	coords.resize(n_faces);
+	uv_box.resize(n_faces);
+	for (int i = 0; i < n_faces; ++i) {
+		topology.faces[i]->random_sample_points(num_points, samples[i], coords[i], uv_box[i]);
+	}
+}
+
+void PartMaskSDF::init(BREPTopology& topology, PartOptions options)
+{
+	const int quality = options.sdf_sample_quality;
+	const int num_points = options.num_sdf_samples;
+	const int n_faces = topology.faces.size();
+	sdf.resize(n_faces);
+	coords.resize(n_faces);
+	uv_box.resize(n_faces);
+	for (int i = 0; i < n_faces; ++i) {
+		// TODO - commented out so it would compile - implement in the OCCT case, or remove
+		//topology.faces[i].sample_mask_sdf(quality, num_points, coords[i], sdf[i], uv_box[i]);
+	}
+}
+
+
 
 void PartSummary::init(BREPTopology& topology, MassProperties& mass_props, Eigen::MatrixXd& bb)
 {
@@ -418,24 +459,24 @@ void PartSummary::init(BREPTopology& topology, MassProperties& mass_props, Eigen
 	topo_type_counts(2) = topology.vertices.size();
 	topo_type_counts(3) = topology.loops.size(); // Put loops last to match old fingerprint
 
-	surface_type_counts.resize(13);
+	surface_type_counts.resize(15);
 	surface_type_counts.setZero();
 	for (auto& face : topology.faces) {
-		int f_idx = static_cast<int>(face.function);
+		int f_idx = static_cast<int>(face->function);
 		surface_type_counts(f_idx) += 1;
 	}
 
-	curve_type_counts.resize(11);
+	curve_type_counts.resize(15);
 	curve_type_counts.setZero();
 	for (auto& edge : topology.edges) {
-		int f_idx = static_cast<int>(edge.function);
+		int f_idx = static_cast<int>(edge->function);
 		curve_type_counts(f_idx) += 1;
 	}
 
 	loop_type_counts.resize(10);
 	loop_type_counts.setZero();
 	for (auto& loop : topology.loops) {
-		int t_idx = static_cast<int>(loop._type);
+		int t_idx = static_cast<int>(loop->_type);
 		loop_type_counts(t_idx) += 1;
 	}
 
@@ -579,4 +620,6 @@ MCF::MCF(const PartInference& origin_inf, const PartInference& axis_inf, bool on
 	}
 	ref.origin_ref = origin_inf.reference;
 	ref.axis_ref = axis_inf.reference;
+}
+
 }

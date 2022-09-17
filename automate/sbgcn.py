@@ -2,6 +2,7 @@ import torch
 import torch_scatter
 from torch.nn import Linear, Sequential, ModuleList, BatchNorm1d, Dropout, LeakyReLU, ReLU
 import torch_geometric as tg
+from .uvnet_encoders import UVNetCurveEncoder, UVNetSurfaceEncoder
 
 """
 HetData(n_faces=22, n_edges=52, n_vertices=32, n_loops=22, faces=[22, 56], loops=[22, 38], edges=[52, 63], 
@@ -17,9 +18,28 @@ class SBGCN(torch.nn.Module):
         e_in_width,
         v_in_width,
         out_width,
-        k
+        k,
+        use_uvnet_features=False,
+        crv_in_dim=[0, 1, 2, 3, 4, 5],
+        srf_in_dim=[0, 1, 2, 3, 4, 5, 8],
+        crv_emb_dim=64,
+        srf_emb_dim=64,
     ):
         super().__init__()
+        self.use_uvnet_features = use_uvnet_features
+        self.crv_in_dim = crv_in_dim
+        self.srf_in_dim = srf_in_dim
+        if use_uvnet_features:
+            self.crv_emb_dim = crv_emb_dim
+            self.srf_emb_dim = srf_emb_dim
+            self.curv_encoder = UVNetCurveEncoder(
+                in_channels=len(crv_in_dim), output_dims=crv_emb_dim
+            )
+            self.surf_encoder = UVNetSurfaceEncoder(
+                in_channels=len(srf_in_dim), output_dims=srf_emb_dim
+            )
+            f_in_width += srf_emb_dim
+            e_in_width += crv_emb_dim
 
         self.embed_f_in = LinearBlock(f_in_width, out_width)
         self.embed_l_in = LinearBlock(l_in_width, out_width)
@@ -37,12 +57,22 @@ class SBGCN(torch.nn.Module):
         self.F2L = BipartiteResMRConv(out_width)
         self.L2E = BipartiteResMRConv(out_width)
         self.E2V = BipartiteResMRConv(out_width)
+
     
     def forward(self, data):
         x_f = data.faces
         x_l = data.loops
         x_e = data.edges
         x_v = data.vertices
+
+
+        # Compute uvnet features
+        if self.use_uvnet_features:
+            hidden_srf_feat = self.surf_encoder(data.face_samples[:,self.srf_in_dim,:,:])
+            hidden_crv_feat = self.curv_encoder(data.edge_samples[:,self.crv_in_dim,:])
+            x_f = torch.cat((x_f, hidden_srf_feat), dim=1)
+            x_e = torch.cat((x_e, hidden_crv_feat), dim=1)
+
 
         # Apply Input Encoders
         x_f = self.embed_f_in(x_f)
@@ -51,7 +81,7 @@ class SBGCN(torch.nn.Module):
         x_v = self.embed_v_in(x_v)
 
 
-        # Upward Pass ([[0,1]] flips downwards graph edges)
+        # Upward Pass ([[1,0]] flips downwards graph edges)
         x_e = self.V2E(x_v, x_e, data.edge_to_vertex[[1,0]])
         x_l = self.E2L(x_e, x_l, data.loop_to_edge[[1,0]])
         x_f = self.L2F(x_l, x_f, data.face_to_loop[[1,0]])
