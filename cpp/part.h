@@ -23,6 +23,8 @@ struct PartOptions {
 	bool default_mcfs_only_face_axes = false;
 	bool onshape_style = true;
 	bool collect_inferences = false;
+	bool set_quality = false;
+	double quality = 0.01;
 };
 
 struct Mesh {

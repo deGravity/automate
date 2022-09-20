@@ -177,7 +177,9 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readwrite("default_mcfs", &PartOptions::default_mcfs)
 		.def_readwrite("default_mcfs_only_face_axes", &PartOptions::default_mcfs_only_face_axes)
 		.def_readwrite("onshape_style", &PartOptions::onshape_style)
-		.def_readwrite("collect_inferences", &PartOptions::collect_inferences);
+		.def_readwrite("collect_inferences", &PartOptions::collect_inferences)
+		.def_readwrite("set_quality", &PartOptions::set_quality)
+		.def_readwrite("quality", &PartOptions::quality);
 
 	py::class_<Part>(m, "Part")
 		.def(py::init<const std::string&>())

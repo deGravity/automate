@@ -55,7 +55,9 @@ Part::Part(const std::string& path, PartOptions options)
 			mesh.F,
 			mesh_topology.face_to_topology,
 			mesh_topology.edge_to_topology,
-			mesh_topology.point_to_topology);
+			mesh_topology.point_to_topology,
+			options.set_quality,
+			options.quality);
 		mesh_topology.renumber(topology);
 	}
 

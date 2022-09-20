@@ -12,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
   brloader
   GIT_REPOSITORY   https://github.com/deGravity/breploader.git
-  GIT_TAG   v0.1
+  GIT_TAG   v0.2
 )
 
 FetchContent_MakeAvailable(brloader)
