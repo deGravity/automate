@@ -75,6 +75,8 @@ struct PartFace {
 	std::vector<int> vertex_neighbors;
 
 	std::vector<PartInference> inferences;
+
+	std::string export_id;
 };
 
 struct PartLoop {
@@ -90,6 +92,8 @@ struct PartLoop {
 	std::vector<int> vertex_neighbors;
 
 	std::vector<PartInference> inferences;
+
+	std::string export_id;
 };
 
 struct PartEdge {
@@ -112,6 +116,8 @@ struct PartEdge {
 	std::vector<int> vertex_neighbors;
 
 	std::vector<PartInference> inferences;
+
+	std::string export_id;
 };
 
 struct PartVertex {
@@ -120,6 +126,8 @@ struct PartVertex {
 	Eigen::Vector3d position;
 
 	std::vector<PartInference> inferences;
+
+	std::string export_id;
 };
 
 struct PartTopologyNodes {

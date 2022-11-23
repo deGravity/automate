@@ -335,6 +335,8 @@ PartFace::PartFace(std::shared_ptr<Face>& f, int i)
 		inferences.emplace_back(inf, TopologyType::FACE, index);
 	}
 
+	export_id = f->export_id;
+
 }
 
 PartLoop::PartLoop(std::shared_ptr<Loop>& l, int i)
@@ -356,6 +358,8 @@ PartLoop::PartLoop(std::shared_ptr<Loop>& l, int i)
 	for (auto& inf : infs) {
 		inferences.emplace_back(inf, TopologyType::LOOP, index);
 	}
+
+	export_id = l->export_id;
 }
 
 PartEdge::PartEdge(std::shared_ptr<Edge>& e, int i)
@@ -386,6 +390,8 @@ PartEdge::PartEdge(std::shared_ptr<Edge>& e, int i)
 	for (auto& inf : infs) {
 		inferences.emplace_back(inf, TopologyType::EDGE, index);
 	}
+
+	export_id = e->export_id;
 }
 
 PartVertex::PartVertex(std::shared_ptr<Vertex>& v, int i)
@@ -398,6 +404,8 @@ PartVertex::PartVertex(std::shared_ptr<Vertex>& v, int i)
 	for (auto& inf : infs) {
 		inferences.emplace_back(inf, TopologyType::VERTEX, index);
 	}
+	
+	export_id = v->export_id;
 }
 
 void PartSamples::init(BREPTopology& topology, PartOptions options)

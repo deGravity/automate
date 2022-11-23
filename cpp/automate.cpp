@@ -230,7 +230,8 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("loop_neighbors", &PartFace::loop_neighbors)
 		.def_readonly("edge_neighbors", &PartFace::edge_neighbors)
 		.def_readonly("vertex_neighbors", &PartFace::vertex_neighbors)
-		.def_readonly("inferences", &PartFace::inferences);
+		.def_readonly("inferences", &PartFace::inferences)
+		.def_readonly("export_id", &PartFace::export_id);
 
 	py::class_<PartLoop>(m, "PartLoop")
 		.def_readonly("index", &PartLoop::index)
@@ -241,7 +242,8 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("na_bounding_box", &PartLoop::na_bounding_box)
 		.def_readonly("edge_neighbors", &PartLoop::edge_neighbors)
 		.def_readonly("vertex_neighbors", &PartLoop::vertex_neighbors)
-		.def_readonly("inferences", &PartLoop::inferences);
+		.def_readonly("inferences", &PartLoop::inferences)
+		.def_readonly("export_id", &PartLoop::export_id);
 
 	py::class_<PartEdge>(m, "PartEdge")
 		.def_readonly("index", &PartEdge::index)
@@ -259,12 +261,14 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("bounding_box", &PartEdge::bounding_box)
 		.def_readonly("na_bounding_box", &PartEdge::na_bounding_box)
 		.def_readonly("vertex_neighbors", &PartEdge::vertex_neighbors)
-		.def_readonly("inferences", &PartEdge::inferences);
+		.def_readonly("inferences", &PartEdge::inferences)
+		.def_readonly("export_id", &PartEdge::export_id);
 
 	py::class_<PartVertex>(m, "PartVertex")
 		.def_readonly("index", &PartVertex::index)
 		.def_readonly("position", &PartVertex::position)
-		.def_readonly("inferences", &PartVertex::inferences);
+		.def_readonly("inferences", &PartVertex::inferences)
+		.def_readonly("export_id", &PartVertex::export_id);
 
 	py::class_<PartTopologyNodes>(m, "PartTopologyNodes")
 		.def_readonly("faces", &PartTopologyNodes::faces)

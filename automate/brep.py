@@ -7,6 +7,7 @@ from torch_geometric.data import Batch
 from automate_cpp import Part, PartOptions
 import json
 import os
+import xxhash
 
 class PartDataset(torch.utils.data.Dataset):
     def __init__(
@@ -355,7 +356,7 @@ def featurize_edge(e, options):
     if options.edge.bounding_box:
         feature_parts.append(to_flat(e.bounding_box))
     if options.edge.na_bounding_box:
-        feature_parts.append(to_flat(e.na_bounding_box))
+        feature_parts.append(to_flat(e.na_bounding_box)) # TODO - does this actually contain everything?
     if options.edge.center_of_gravity:
         feature_parts.append(to_flat(e.center_of_gravity))
     if options.edge.moment_of_inertia:
@@ -437,13 +438,23 @@ def part_to_graph(part, options):
     loop_offset = vertex_offset + n_vertices
     topo_offsets = [face_offset, edge_offset, vertex_offset, loop_offset]
 
-
     # Setup Node Data
     if options.brep:
         face_features = [featurize_face(f, options) for f in part.brep.nodes.faces]
         loop_features = [featurize_loop(f, options) for f in part.brep.nodes.loops]
         edge_features = [featurize_edge(f, options) for f in part.brep.nodes.edges]
         vert_features = [featurize_vert(f, options) for f in part.brep.nodes.vertices]
+
+
+        data.face_export_ids = torch.tensor([xxhash.xxh32(f.export_id).intdigest() for f in part.brep.nodes.faces]).long()
+        data.loop_export_ids = torch.tensor([xxhash.xxh32(l.export_id).intdigest() for l in part.brep.nodes.loops]).long()
+        data.edge_export_ids = torch.tensor([xxhash.xxh32(e.export_id).intdigest() for e in part.brep.nodes.edges]).long()
+        data.vertex_export_ids = torch.tensor([xxhash.xxh32(v.export_id).intdigest() for v in part.brep.nodes.vertices]).long()
+
+        data.__node_sets__.add('face_export_ids')
+        data.__node_sets__.add('loop_export_ids')
+        data.__node_sets__.add('edge_export_ids')
+        data.__node_sets__.add('vertex_export_ids')
 
         data.faces = torch.stack(face_features) if face_features else torch.empty((0, options.face.size()), dtype=torch.float)
         data.__node_sets__.add('faces')
