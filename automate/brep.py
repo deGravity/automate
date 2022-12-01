@@ -161,20 +161,20 @@ class FaceFeatures:
         
                 if self.exclude_origin:
                     s -= 3
-        if self.face.orientation:
+        if self.orientation:
             s += 1
     
-        if self.face.surface_area:
+        if self.surface_area:
             s += 1
-        if self.face.circumference:
+        if self.circumference:
             s += 1
-        if self.face.bounding_box:
+        if self.bounding_box:
             s += 6
-        if self.face.na_bounding_box:
+        if self.na_bounding_box:
             s += 15
-        if self.face.center_of_gravity:
+        if self.center_of_gravity:
             s += 3
-        if self.face.moment_of_inertia:
+        if self.moment_of_inertia:
             s += 9
 
         return s
