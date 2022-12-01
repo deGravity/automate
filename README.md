@@ -26,7 +26,7 @@ Replace ``intel_linux`` with the directory appropriate to your OS. The base dire
 
 Once these requirements are met, you an install via pip:
 
-`pip install git+https://github.com/degravity/automate.git@v1.0.1`
+`pip install git+https://github.com/degravity/automate.git@v1.0.4`
 
 
 ### Troubleshooting
