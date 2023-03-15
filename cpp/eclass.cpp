@@ -2,6 +2,7 @@
 
 #include "lsh.h"
 #include "disjointset.h"
+#include <cassert>
 
 namespace pspy {
 
