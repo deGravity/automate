@@ -5,7 +5,7 @@ Dataset and code for the automatic mating of CAD assemblies.
 Please see our [paper](https://dl.acm.org/doi/10.1145/3478513.3480562) for more details.
 
 ## Dataset
-The AutoMate Dataset can be downloaded at [AutoMateDataset.com](http://automatedataset.com).
+The AutoMate Dataset can be downloaded from [Zenodo](https://zenodo.org/record/7776208#.ZDcYinbMIQ8).
 
 
 ## Installation
@@ -39,7 +39,7 @@ If you get this error when trying to import part of the module, it means that py
 
 ## Citing
 
-If you use this code our the [AutoMate Dataset](http://automatedataset.com) in your work, please cite us:
+If you use this code our the [AutoMate Dataset](https://zenodo.org/record/7776208#.ZDcYinbMIQ8) in your work, please cite us:
 
 ```
 @article{10.1145/3478513.3480562,
