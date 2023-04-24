@@ -433,8 +433,38 @@ void PartRandomSamples::init(BREPTopology& topology, PartOptions options)
 	samples.resize(n_faces);
 	coords.resize(n_faces);
 	uv_box.resize(n_faces);
-	for (int i = 0; i < n_faces; ++i) {
-		topology.faces[i]->random_sample_points(num_points, samples[i], coords[i], uv_box[i]);
+
+	if (options.uniform_samples)
+	{
+		double total_surface_area = 0;
+		for (int i=0; i < n_faces; ++i) {
+			total_surface_area += topology.faces[i]->surface_area;
+		}
+		double offset = 0;
+		double last_offset = 0;
+		std::vector<int> sample_counts;
+		int curr_point_total = 0;
+		for (int i = 0; i < n_faces; ++i) {
+			offset += topology.faces[i]->surface_area / total_surface_area * num_points;
+			int curr_num_points = static_cast<int>(std::round(offset - last_offset));
+			if (curr_num_points > 0)
+			{
+				curr_point_total += curr_num_points;
+				if (curr_point_total > num_points)
+				{
+					curr_num_points -= curr_point_total - num_points;
+					curr_point_total = num_points;
+				}
+				topology.faces[i]->random_sample_points(curr_num_points, samples[i], coords[i], uv_box[i]);
+				last_offset = offset;
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < n_faces; ++i) {
+			topology.faces[i]->random_sample_points(num_points, samples[i], coords[i], uv_box[i]);
+		}
 	}
 }
 

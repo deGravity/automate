@@ -14,6 +14,7 @@ struct PartOptions {
 	Eigen::Matrix<double, 4, 4> transform_matrix;
 	int num_uv_samples = 10;
 	int num_random_samples = 0;
+	bool uniform_samples = false;
 	int num_sdf_samples = 0;
 	int sdf_sample_quality = 5000;
 	bool sample_normals = true;
