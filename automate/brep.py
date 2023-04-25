@@ -91,6 +91,9 @@ class PartFeatures:
         self.edge_samples = True
         self.tangents = True
 
+        # Include random samples
+        self.random_samples = True
+
         # Part Level Data
         self.bounding_box = True
         self.volume = True
@@ -582,6 +585,10 @@ def part_to_graph(part, options):
             if has_tangents and not options.tangents:
                 samples = samples[:,:3,:]
             data.edge_samples = samples
+    
+    # Setup Uniform Samples
+    if options.random_samples:
+        data.random_samples = part.random_samples.samples
 
     # Setup MCFs
     if options.mcfs:
