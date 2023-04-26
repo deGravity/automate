@@ -169,7 +169,6 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readwrite("transform_matrix", &PartOptions::transform_matrix)
 		.def_readwrite("num_uv_samples", &PartOptions::num_uv_samples)
 		.def_readwrite("num_random_samples", &PartOptions::num_random_samples)
-		.def_readwrite("uniform_samples", &PartOptions::uniform_samples)
 		.def_readwrite("num_sdf_samples", &PartOptions::num_sdf_samples)
 		.def_readwrite("sdf_sample_quality", &PartOptions::sdf_sample_quality)
 		.def_readwrite("sample_normals", &PartOptions::num_uv_samples)

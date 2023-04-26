@@ -8,6 +8,7 @@ from automate_cpp import Part, PartOptions
 import json
 import os
 import xxhash
+import torch_scatter
 
 class PartDataset(torch.utils.data.Dataset):
     def __init__(
@@ -93,6 +94,8 @@ class PartFeatures:
 
         # Include random samples
         self.random_samples = True
+        self.num_uniform_samples = 10000
+        self.uniform_samples = False
 
         # Part Level Data
         self.bounding_box = True
@@ -586,9 +589,26 @@ def part_to_graph(part, options):
                 samples = samples[:,:3,:]
             data.edge_samples = samples
     
-    # Setup Uniform Samples
+    # Setup Random Samples
     if options.random_samples:
-        data.random_samples = part.random_samples.samples
+        random_samples = part.random_samples.samples
+        if options.uniform_samples:
+            surface_areas = torch.tensor([face.surface_area for face in part.brep.nodes.faces])
+            face_choices = torch.multinomial(surface_areas, options.num_uniform_samples, replacement=True)
+            face_counts = torch_scatter.scatter_add(torch.ones(face_choices.shape, dtype=torch.long), face_choices, dim_size=len(surface_areas))
+            
+            all_samples = []
+            for sample, count in zip(random_samples, face_counts):
+                sample = torch.from_numpy(sample).float()
+                sample_filtered = sample[sample[:,6] > 0.5,:6]
+                if count < sample_filtered.shape[0]:
+                    sample_filtered = sample_filtered[:count]
+                all_samples.append(sample_filtered)
+            data.uniform_samples = torch.vstack(all_samples).float()
+        else:
+            if isinstance(random_samples, list):
+                random_samples = torchify(random_samples)
+            data.random_samples = random_samples
 
     # Setup MCFs
     if options.mcfs:
