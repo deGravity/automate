@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="AutoMate: A Dataset and Learning Approach for Automatic Mating of CAD Assemblies">
+  <meta name="keywords" content="Computer-Aided Design, Boundary Representation, Representation Learning, Assembly-Based Modeling">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoMate: A Dataset and Learning Approach for Automatic Mating of CAD Assemblies</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="http://bentodjones.com">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More Research
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://deGravity.github.io/automate">
+            AutoMate
+          </a>
+          <a class="navbar-item" href="https://deGravity.github.io/hybridbrep">
+            Self-Supervised Representation Learning for CAD
+          </a>
+          <a class="navbar-item" href="https://degravity.github.io/brepmatching">
+            B-Rep Matching
+          </a>
+          <a class="navbar-item" href="https://milmillin.github.io/templatizer">
+            ReParam CAD
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">AutoMate: A Dataset and Learning Approach for Automatic Mating of CAD Assemblies</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="http://bentodjones.com">Benjamin T. Jones</a><sup>1</sup>,</span>
+            <span class="author-block">
+              <a href="https://daltonhildreth.com/">Dalton Hildreth</a><sup>1</sup>,</span>
+            <span class="author-block">
+              <a href="https://cdwj.github.io/">Duowen Chen</a><sup>1</sup>,
+            </span>
+            <span class="author-block">
+              Ilya Baran<sup>2</sup>,
+            </span>
+            <span class="author-block">
+              <a href="http://www.vovakim.com">Vladimir G. Kim</a><sup>3</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://homes.cs.washington.edu/~adriana/">Adriana Schulz</a><sup>1</sup>,
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>University of Washington,</span>
+            <span class="author-block"><sup>2</sup>PTC Inc</span>
+            <span class="author-block"><sup>3</sup>Adobe Research</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/pdf/2105.12238.pdf"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2105.12238"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <!-- Video Link. -->
+              <span class="link-block">
+                <a href="https://www.youtube.com/watch?v=GQnMOg5IzBo"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Video</span>
+                </a>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/degravity/automate"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+              <!-- Dataset Link. -->
+              <span class="link-block">
+                <a href="https://zenodo.org/record/7776208#.ZDcYinbMIQ8"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="far fa-images"></i>
+                  </span>
+                  <span>Data</span>
+                  </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <img src="./static/images/main_image.png"
+                 class="interpolation-image"
+                 alt="AutoMate overview image."/>
+      <h2 class="subtitle has-text-centered">
+        <span class="dnerf">AutoMate</span> suggests mates between CAD parts.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!---
+<section class="hero is-light is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item item-steve">
+          <video poster="" id="steve" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/steve.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp">
+          <video poster="" id="chair-tp" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/chair-tp.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-shiba">
+          <video poster="" id="shiba" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/shiba.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-fullbody">
+          <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/fullbody.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-blueshirt">
+          <video poster="" id="blueshirt" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/blueshirt.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-mask">
+          <video poster="" id="mask" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/mask.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-coffee">
+          <video poster="" id="coffee" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/coffee.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-toby">
+          <video poster="" id="toby" autoplay controls muted loop playsinline height="100%">
+            <source src="./static/videos/toby2.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+-->
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Assembly modeling is a core task of computer aided design (CAD), 
+            comprising around one third of the work in a CAD workflow. Optimizing 
+            this process therefore represents a huge opportunity in the design of 
+            a CAD system, but current research of assembly based modeling is not 
+            directly applicable to modern CAD systems because it eschews the dominant 
+            data structure of modern CAD: parametric boundary representations (BREPs). 
+            CAD assembly modeling defines assemblies as a system of pairwise 
+            constraints, called <i>mates</i>, between parts, which are defined 
+            relative to BREP topology rather than in world coordinates common to 
+            existing work.  We propose SB-GCN, a representation learning scheme on 
+            BREPs that retains the topological structure of parts, and use these 
+            learned representations to predict CAD type mates. To train our system, 
+            we compiled the first large scale dataset of BREP CAD assemblies, which 
+            we are releasing along with benchmark mate prediction tasks. Finally, 
+            we demonstrate the compatibility of our model with an existing commercial 
+            CAD system by building a tool that assists users in mate creation by 
+            suggesting mate completions, with 72.2% accuracy.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+
+    <!-- Paper video. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Video</h2>
+        <div class="publication-video">
+          <iframe src="https://www.youtube.com/embed/GQnMOg5IzBo?rel=0&amp;showinfo=0"
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+    <!--/ Paper video. -->
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+
+      <!-- Visual Effects. -->
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">SB-GCN</h2>
+          <p>
+            The <b>S</b>tructured <b>B</b>-rep <b>GCN</b> (SB-GCN) uses a hierarchal
+            graph neural network to learn embeddings for all types of B-Rep topology
+            while being memory efficient and enabling deep networks.
+          </p>
+          <img src="./static/images/sbgcn.png"
+                 class="interpolation-image"
+                 alt="SB-GCN network architecture."/>
+        </div>
+      </div>
+      <!--/ Visual Effects. -->
+
+      <!-- Matting. -->
+      <div class="column">
+        <h2 class="title is-3">AutoMate Dataset</h2>
+        <div class="columns is-centered">
+          <div class="column content">
+            <p>
+              The <a href="https://zenodo.org/record/7776208#.ZDcYinbMIQ8">
+                AutoMate Dataset</a> contains over half a million unique mates
+                across nearly 100,000 unique assemblies for training automated
+                assembly.
+            </p>
+            <img src="./static/images/dataset.png"
+                   class="interpolation-image"
+                   alt="AutoMate dataset preview."/>
+          </div>
+
+        </div>
+      </div>
+      
+    </div>
+    <!--/ Matting. -->
+
+    <div class="columns is-centered">
+
+      <!-- Visual Effects. -->
+      <div class="column">
+        <h2 class="title is-3">Mate Suggestion</h2>
+        <div class="columns is-centered">
+          <div class="column content">
+            <p>
+              AutoMate auto-completes mates in a CAD assembly by suggestiing the
+              most likely mates when parts are selected in a CAD system.
+            </p>
+            <img src="./static/images/ui.png"
+                   class="interpolation-image"
+                   alt="OnShape plugin UI screenshot."/>
+          </div>
+
+        </div>
+      </div>
+      
+      <!--/ Visual Effects. -->
+
+      <!-- Matting. -->
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Mate Functionality</h2>
+          <p>
+            The AutoMate dataset classifies the functionality of each mate
+            as one of 8 types of joint motion, and AutoMate predicts the most
+            likely joint type for a given mate.
+          </p>
+          <img src="./static/images/matetypes.png"
+                 class="interpolation-image"
+                 alt="8 mate types: fastened, revolute, slider, planar, cylindrical, pin slot, ball, and parallel."/>
+        </div>
+      </div>
+      
+    </div>
+    <!--/ Matting. -->
+
+
+    <!--
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Related Links</h2>
+
+        <div class="content has-text-justified">
+          <p>
+            There's a lot of excellent work that was introduced around the same time as ours.
+          </p>
+          <p>
+            <a href="https://arxiv.org/abs/2104.09125">Progressive Encoding for Neural Optimization</a> introduces an idea similar to our windowed position encoding for coarse-to-fine optimization.
+          </p>
+          <p>
+            <a href="https://www.albertpumarola.com/research/D-NeRF/index.html">D-NeRF</a> and <a href="https://gvv.mpi-inf.mpg.de/projects/nonrigid_nerf/">NR-NeRF</a>
+            both use deformation fields to model non-rigid scenes.
+          </p>
+          <p>
+            Some works model videos with a NeRF by directly modulating the density, such as <a href="https://video-nerf.github.io/">Video-NeRF</a>, <a href="https://www.cs.cornell.edu/~zl548/NSFF/">NSFF</a>, and <a href="https://neural-3d-video.github.io/">DyNeRF</a>
+          </p>
+          <p>
+            There are probably many more by the time you are reading this. Check out <a href="https://dellaert.github.io/NeRF/">Frank Dellart's survey on recent NeRF papers</a>, and <a href="https://github.com/yenchenlin/awesome-NeRF">Yen-Chen Lin's curated list of NeRF papers</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+-->
+</section>
+
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{jones2021automate,
+      title={Automate: A dataset and learning approach for automatic mating of cad assemblies},
+      author={Jones, Benjamin and Hildreth, Dalton and Chen, Duowen and Baran, Ilya and Kim, Vladimir G and Schulz, Adriana},
+      journal={ACM Transactions on Graphics (TOG)},
+      volume={40},
+      number={6},
+      pages={1--18},
+      year={2021},
+      publisher={ACM New York, NY, USA}
+    }
+</code></pre>
+  </div>
+</section>
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link"
+         href="./static/videos/nerfies_paper.pdf">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+      <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
+        <i class="fab fa-github"></i>
+      </a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is based on the Nerfies website, which is licensed under a <a rel="license"
+                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a> and is <a href="https://github.com/nerfies/nerfies.github.io">available on GitHub</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
