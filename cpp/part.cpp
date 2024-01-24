@@ -211,7 +211,7 @@ void MeshTopology::renumber(BREPTopology& topology)
 			}
 			
 			auto topo_type = topology.pk_to_class[edge_to_topology(i, j)];
-			if (topo_type == PK_CLASS_edge) {
+			if (topo_type == TopologyType::EDGE) {
 				edge_to_topology(i, j) = topology.pk_to_idx[topo_pk_idx];
 			}
 			else {
@@ -226,7 +226,7 @@ void MeshTopology::renumber(BREPTopology& topology)
 			continue;
 		}
 		auto topo_type = topology.pk_to_class[topo_pk_idx];
-		if (topo_type == PK_CLASS_vertex) {
+		if (topo_type == TopologyType::VERTEX) {
 			point_to_topology(i) = topology.pk_to_idx[topo_pk_idx];
 		}
 		else {

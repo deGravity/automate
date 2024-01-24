@@ -341,6 +341,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 				return "<Body>";
 			});
 
+#ifdef PARASOLID
 	py::class_<PSBody>(m, "PSBody")
 		.def("GetTopology", &PSBody::GetTopology)
 		.def("GetMassProperties", &PSBody::GetMassProperties)
@@ -351,6 +352,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 			[](const PSBody& p) {
 				return "<Parasolid Body>";
 			});
+#endif
 
 	py::class_<OCCTBody>(m, "OCCTBody")
 		.def("GetTopology", &OCCTBody::GetTopology)
@@ -364,7 +366,9 @@ PYBIND11_MODULE(automate_cpp, m) {
 			});
 
 	m.def("read_file", &read_file);
+#ifdef PARASOLID
 	m.def("read_xt", &read_xt);
+#endif
 	m.def("read_step", &read_step);
 
 	
@@ -375,7 +379,8 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.value("FACE", TopologyType::FACE)
 		.value("EDGE", TopologyType::EDGE)
 		.value("VERTEX", TopologyType::VERTEX)
-		.value("LOOP", TopologyType::LOOP);
+		.value("LOOP", TopologyType::LOOP)
+		.value("OTHER", TopologyType::OTHER);
 
 	py::enum_<SurfaceFunction>(m, "SurfaceFunction")
 		.value("PLANE", SurfaceFunction::PLANE)
@@ -525,6 +530,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("moment_of_inertia", &Face::moment_of_inertia)
 		.def("__repr__", face_repr);
 
+#ifdef PARASOLID
 	py::class_<PSFace>(m, "PSFace")
 		.def("get_inferences", &PSFace::get_inferences)
 		.def("sample_points", &PSFace::sample_points)
@@ -541,6 +547,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("center_of_gravity", &PSFace::center_of_gravity)
 		.def_readonly("moment_of_inertia", &PSFace::moment_of_inertia)
 		.def("__repr__", face_repr);
+#endif
 
 	py::class_<OCCTFace>(m, "OCCTFace")
 		.def("get_inferences", &OCCTFace::get_inferences)
@@ -573,6 +580,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("na_bounding_box", &Loop::na_bounding_box)
 		.def("__repr__", loop_repr);
 
+#ifdef PARASOLID
 	py::class_<PSLoop>(m, "PSLoop")
 		.def("get_inferences", &PSLoop::get_inferences)
 		.def_readonly("_type", &PSLoop::_type)
@@ -585,6 +593,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("na_bb_z", &PSLoop::na_bb_z)
 		.def_readonly("na_bounding_box", &PSLoop::na_bounding_box)
 		.def("__repr__", loop_repr);
+#endif
 
 	py::class_<OCCTLoop>(m, "OCCTLoop")
 		.def("get_inferences", &OCCTLoop::get_inferences)
@@ -621,6 +630,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("nn_bounding_box", &Edge::na_bounding_box)
 		.def("__repr__", edge_repr);
 
+#ifdef PARASOLID
 	py::class_<PSEdge>(m, "PSEdge")
 		.def("get_inferences", &PSEdge::get_inferences)
 		.def("sample_points", &PSEdge::sample_points)
@@ -643,6 +653,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 		.def_readonly("na_bb_z", &PSEdge::na_bb_z)
 		.def_readonly("nn_bounding_box", &PSEdge::na_bounding_box)
 		.def("__repr__", edge_repr);
+#endif
 
 	py::class_<OCCTEdge>(m, "OCCTEdge")
 		.def("get_inferences", &OCCTEdge::get_inferences)
@@ -676,6 +687,7 @@ PYBIND11_MODULE(automate_cpp, m) {
 				return "Vertex(" + std::to_string(v.position(0)) + "," + std::to_string(v.position(1)) + "," + std::to_string(v.position(2)) + ")";
 			});
 
+#ifdef PARASOLID
 	py::class_<PSVertex>(m, "PSVertex")
 		.def("get_inferences", &PSVertex::get_inferences)
 		.def_readonly("position", &PSVertex::position)
@@ -683,6 +695,8 @@ PYBIND11_MODULE(automate_cpp, m) {
 			[](const PSVertex& v) {
 				return "Vertex(" + std::to_string(v.position(0)) + "," + std::to_string(v.position(1)) + "," + std::to_string(v.position(2)) + ")";
 			});
+#endif
+
 
 	py::class_<OCCTVertex>(m, "OCCTVertex")
 		.def("get_inferences", &OCCTVertex::get_inferences)
