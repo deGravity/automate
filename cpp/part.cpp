@@ -433,6 +433,8 @@ void PartRandomSamples::init(BREPTopology& topology, PartOptions options)
 	samples.resize(n_faces);
 	coords.resize(n_faces);
 	uv_box.resize(n_faces);
+
+	
 	for (int i = 0; i < n_faces; ++i) {
 		topology.faces[i]->random_sample_points(num_points, samples[i], coords[i], uv_box[i]);
 	}
