@@ -1,4 +1,6 @@
 #include "lsh.h"
+#include <cassert>
+
 
 namespace pspy {
 
