@@ -33,3 +33,4 @@ dependencies:
   - pybind11
   - pip:
     - pyrender
+    - xxhash
